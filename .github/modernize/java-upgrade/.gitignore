@@ -1,0 +1,92 @@
+# ==============================================================================
+# Java & Build Output
+# ==============================================================================
+*.class
+target/
+**/target/
+build/
+**/build/
+out/
+**/out/
+
+# Maven artifacts & caches
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# Keep Maven Wrapper binaries out (scripts remain tracked)
+.mvn/wrapper/maven-wrapper.jar
+
+# ==============================================================================
+# IDEs & Editor Configuration
+# ==============================================================================
+# VS Code (ignore workspace state, keep shared dev configs if needed)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.history/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+# NetBeans
+nbproject/private/
+build/
+nbdist/
+.nb-gradle/
+
+# ==============================================================================
+# Automation, Modernization & Local Hooks
+# ==============================================================================
+.github/modernize/
+
+# ==============================================================================
+# Logs, Temporary Files & Local Environment
+# ==============================================================================
+*.log
+*.pid
+*.seed
+*.pid.lock
+*.tmp
+*.bak
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# ==============================================================================
+# OS Generated Files
+# ==============================================================================
+# Windows
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
