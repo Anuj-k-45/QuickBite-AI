@@ -21,13 +21,16 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus,gateway
+        include: health, info, prometheus, gateway
   metrics:
     tags:
       application: ${spring.application.name}
   tracing:
     sampling:
-      probability: 1.0
+      probability: 1.0 # 100% sample rate for local testing
   zipkin:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-},%X{spanId:-}] [%thread] %-5level %logger{36} - %msg%n"

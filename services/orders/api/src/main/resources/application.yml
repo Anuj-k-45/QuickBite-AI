@@ -27,6 +27,9 @@ spring:
 
 # Actuator & Observability Configuration
 management:
+  metrics:
+    tags:
+      application: orders-service
   endpoints:
     web:
       exposure:
@@ -38,15 +41,15 @@ management:
         enabled: true
   tracing:
     sampling:
-      probability: 1.0 # Capture 100% of requests during dev
+      probability: 1.0 # Sample 100% of requests for local development & debugging
   zipkin:
     tracing:
-      endpoint: http://localhost:9411/api/v2/spans
+      endpoint: http://localhost:9411/api/v2/spans # URL of your local Zipkin container
 
 # Trace & Span ID in Logs
 logging:
   pattern:
-    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-},%X{spanId:-}] [%thread] %-5level %logger{36} - %msg%n"
 
 springdoc:
   api-docs:
