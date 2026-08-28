@@ -1,21 +1,15 @@
-# Compiled class files
+# ==============================================================================
+# Java & Build Output
+# ==============================================================================
 *.class
-
-# Log files
-*.log
-
-# Package files
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# Maven build artifacts (multi-module)
 target/
 **/target/
+build/
+**/build/
+out/
+**/out/
+
+# Maven artifacts & caches
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -24,33 +18,14 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
+
+# Keep Maven Wrapper binaries out (scripts remain tracked)
 .mvn/wrapper/maven-wrapper.jar
 
-# IDE & Editor files
-.idea/
-*.iml
-*.iws
-*.ipr
-out/
-**/out/
-
-# Eclipse
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-# NetBeans
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-# Visual Studio Code
+# ==============================================================================
+# IDEs & Editor Configuration
+# ==============================================================================
+# VS Code (ignore workspace state, keep shared dev configs if needed)
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -59,17 +34,59 @@ out/
 *.code-workspace
 .history/
 
-# OS-generated files
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+# NetBeans
+nbproject/private/
+build/
+nbdist/
+.nb-gradle/
+
+# ==============================================================================
+# Automation, Modernization & Local Hooks
+# ==============================================================================
+.github/modernize/
+
+# ==============================================================================
+# Logs, Temporary Files & Local Environment
+# ==============================================================================
+*.log
+*.pid
+*.seed
+*.pid.lock
+*.tmp
+*.bak
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# ==============================================================================
+# OS Generated Files
+# ==============================================================================
+# Windows
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# macOS
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
-ehthumbs.db
-Thumbs.db
-[Dd]esktop.ini
-
-# Docker local data & temporary files
-*.pid
-*.seed
-*.pid.lock
