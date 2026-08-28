@@ -24,7 +24,7 @@ public class OrderProjectionConsumer {
         this.objectMapper = objectMapper;
     }
 
-    @RabbitListener(bindings = @QueueBinding(value = @Queue(value = "orders.projection.queue", durable = "true"), exchange = @Exchange(value = "orders.exchange", type = "topic", durable = "true"), key = "order.created"))
+    @RabbitListener(bindings = @QueueBinding(value = @Queue(value = "orders.order-created.projection-queue", durable = "true"), exchange = @Exchange(value = "orders.events", type = "topic", durable = "true"), key = "orders.order.created"))
     public void handleOrderCreated(String messagePayload) {
         try {
             OrderCreatedV1 event = objectMapper.readValue(messagePayload, OrderCreatedV1.class);

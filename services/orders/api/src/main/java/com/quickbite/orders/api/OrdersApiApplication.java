@@ -8,23 +8,23 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(scanBasePackages = {
-        "com.quickbite.buildingblocks",
-        "com.quickbite.orders.core",
-        "com.quickbite.orders.api"
+                "com.quickbite.buildingblocks",
+                "com.quickbite.orders.core",
+                "com.quickbite.orders.api"
 })
 @EntityScan(basePackages = {
-        "com.quickbite.orders.core.orders.model",
-        "com.quickbite.buildingblocks.outbox"
+                "com.quickbite.orders.core.orders.model",
+                "com.quickbite.buildingblocks.outbox"
 })
 @EnableJpaRepositories(basePackages = {
-        "com.quickbite.orders.core.orders.data",
-        "com.quickbite.buildingblocks.outbox"
+                "com.quickbite.orders.core.orders.data",
+                "com.quickbite.buildingblocks.outbox"
 })
 @EnableMongoRepositories(basePackages = "com.quickbite.orders.core.orders.projections")
 @EnableScheduling
 public class OrdersApiApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(OrdersApiApplication.class, args);
-    }
+        public static void main(String[] args) {
+                SpringApplication.run(OrdersApiApplication.class, args);
+        }
 }

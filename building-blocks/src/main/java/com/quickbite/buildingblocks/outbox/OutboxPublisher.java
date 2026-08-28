@@ -20,10 +20,16 @@ public class OutboxPublisher {
     private final RabbitTemplate rabbitTemplate;
 
     @Value("${quickbite.rabbitmq.catalogs-exchange:catalogs.events}")
-    private String exchange;
+    private String catalogsExchange;
 
     @Value("${quickbite.rabbitmq.catalogs-routing-key:catalogs.item.created}")
-    private String routingKey;
+    private String catalogsRoutingKey;
+
+    @Value("${quickbite.rabbitmq.orders-exchange:orders.events}")
+    private String ordersExchange;
+
+    @Value("${quickbite.rabbitmq.orders-routing-key:orders.order.created}")
+    private String ordersRoutingKey;
 
     public OutboxPublisher(OutboxMessageRepository outboxRepository, RabbitTemplate rabbitTemplate) {
         this.outboxRepository = outboxRepository;
@@ -36,12 +42,24 @@ public class OutboxPublisher {
         List<OutboxMessage> messages = outboxRepository.findByStatusOrderByCreatedAtAsc(OutboxStatus.PENDING);
         for (OutboxMessage message : messages) {
             try {
-                rabbitTemplate.convertAndSend(exchange, routingKey, message.getPayload());
+                String targetExchange;
+                String targetRoutingKey;
+
+                String eventType = message.getEventType() != null ? message.getEventType() : "";
+                if (eventType.contains("Order")) {
+                    targetExchange = ordersExchange;
+                    targetRoutingKey = ordersRoutingKey;
+                } else {
+                    targetExchange = catalogsExchange;
+                    targetRoutingKey = catalogsRoutingKey;
+                }
+
+                rabbitTemplate.convertAndSend(targetExchange, targetRoutingKey, message.getPayload());
                 message.setStatus(OutboxStatus.PROCESSED);
                 message.setProcessedAt(Instant.now());
                 outboxRepository.save(message);
-                log.info("[OUTBOX PUBLISHED] Sent event {} [id: {}] to exchange {}", message.getEventType(),
-                        message.getId(), exchange);
+                log.info("[OUTBOX PUBLISHED] Sent event {} [id: {}] to exchange {} with key {}", eventType,
+                        message.getId(), targetExchange, targetRoutingKey);
             } catch (Exception ex) {
                 log.error("[OUTBOX ERROR] Failed to send message {}", message.getId(), ex);
                 message.setStatus(OutboxStatus.FAILED);

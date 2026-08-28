@@ -27,6 +27,7 @@
         <module>services/shared</module>
         <module>services/orders</module>
         <module>services/catalogs</module>
+        <module>api-gateway</module>
     </modules>
 
     <dependencyManagement>
