@@ -1,0 +1,4 @@
+com\quickbite\orders\api\config\RabbitMqConfig.class
+com\quickbite\orders\api\controllers\OrdersController.class
+com\quickbite\orders\api\exceptions\GlobalExceptionHandler.class
+com\quickbite\orders\api\OrdersApiApplication.class

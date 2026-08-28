@@ -1,0 +1,12 @@
+com\quickbite\catalogs\core\products\features\creatingitem\CreateCatalogItemCommandHandler.class
+com\quickbite\catalogs\core\products\features\creatingitem\CreateCatalogItemCommand.class
+com\quickbite\catalogs\core\projections\CatalogReadModel.class
+com\quickbite\catalogs\core\events\CatalogItemCreatedEvent.class
+com\quickbite\catalogs\core\projections\CatalogReadModelRepository.class
+com\quickbite\catalogs\core\products\features\creatingitem\CreateCatalogItemResult.class
+com\quickbite\catalogs\core\products\features\gettingitems\GetCatalogItemsQueryHandler.class
+com\quickbite\catalogs\core\products\data\CatalogItemRepository.class
+com\quickbite\catalogs\core\projections\CatalogProjectionConsumer.class
+com\quickbite\catalogs\core\config\RabbitMQConfig.class
+com\quickbite\catalogs\core\products\model\CatalogItem.class
+com\quickbite\catalogs\core\products\features\gettingitems\GetCatalogItemsQuery.class

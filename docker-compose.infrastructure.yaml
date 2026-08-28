@@ -1,0 +1,75 @@
+services:
+  # PostgreSQL
+  postgres:
+    image: postgres:17-alpine
+    container_name: quickbite-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: quickbite
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: quickbite_orders
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: quickbite-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: quickbite-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  # Zipkin (Distributed Tracing UI & Collector)
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: quickbite-zipkin
+    restart: unless-stopped
+    ports:
+      - "9411:9411"
+
+  # Prometheus (Metrics Scraper & Time-Series DB)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: quickbite-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  # Grafana (Visual Dashboards)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: quickbite-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  postgres_data:
+  mongo_data:
+  rabbitmq_data:
+  grafana_data:

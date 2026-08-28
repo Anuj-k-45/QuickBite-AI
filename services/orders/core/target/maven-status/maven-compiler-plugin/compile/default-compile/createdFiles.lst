@@ -1,0 +1,16 @@
+com\quickbite\orders\core\orders\model\OrderItem.class
+com\quickbite\orders\core\orders\projections\OrderProjectionConsumer.class
+com\quickbite\orders\core\orders\model\OrderStatus.class
+com\quickbite\orders\core\orders\features\gettingorderbyid\OrderDetailsDto$OrderItemDto.class
+com\quickbite\orders\core\orders\features\creatingorder\CreateOrderCommandHandler.class
+com\quickbite\orders\core\orders\features\creatingorder\CreateOrderResult.class
+com\quickbite\orders\core\orders\model\Order.class
+com\quickbite\orders\core\orders\features\gettingorderbyid\GetOrderByIdQuery.class
+com\quickbite\orders\core\orders\features\gettingorderbyid\OrderDetailsDto.class
+com\quickbite\orders\core\orders\projections\OrderReadModelRepository.class
+com\quickbite\orders\core\orders\projections\OrderReadModel$OrderItemReadModel.class
+com\quickbite\orders\core\orders\features\creatingorder\CreateOrderCommand$OrderItemDto.class
+com\quickbite\orders\core\orders\features\gettingorderbyid\GetOrderByIdQueryHandler.class
+com\quickbite\orders\core\orders\features\creatingorder\CreateOrderCommand.class
+com\quickbite\orders\core\orders\data\OrderRepository.class
+com\quickbite\orders\core\orders\projections\OrderReadModel.class
