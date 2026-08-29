@@ -68,8 +68,18 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
 
+  redis:
+    image: redis:7.2-alpine
+    container_name: quickbite-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
 volumes:
   postgres_data:
   mongo_data:
   rabbitmq_data:
   grafana_data:
+  redis_data:

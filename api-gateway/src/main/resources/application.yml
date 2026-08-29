@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: api-gateway
+  data:
+    redis:
+      host: localhost
+      port: 6379
   cloud:
     gateway:
       routes:
@@ -11,11 +15,33 @@ spring:
           uri: http://localhost:5002
           predicates:
             - Path=/api/v1/catalogs, /api/v1/catalogs/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: catalogServiceCircuitBreaker
+                fallbackUri: forward:/fallback/catalogs
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 2 # How many requests allowed per second
+                redis-rate-limiter.burstCapacity: 4 # Max spike capacity allowed in a single burst
+                redis-rate-limiter.requestedTokens: 1 # Tokens consumed per request
+                key-resolver: "#{@ipKeyResolver}" # Identifies clients by IP address
 
         - id: orders-service
           uri: http://localhost:5001
           predicates:
             - Path=/api/v1/orders, /api/v1/orders/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: orderServiceCircuitBreaker
+                fallbackUri: forward:/fallback/orders
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 4
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
 
 management:
   endpoints:
@@ -25,12 +51,19 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-  tracing:
-    sampling:
-      probability: 1.0 # 100% sample rate for local testing
-  zipkin:
-    tracing:
-      endpoint: http://localhost:9411/api/v2/spans
-logging:
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-},%X{spanId:-}] [%thread] %-5level %logger{36} - %msg%n"
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      catalogServiceCircuitBreaker:
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 2
+      orderServiceCircuitBreaker:
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 2
