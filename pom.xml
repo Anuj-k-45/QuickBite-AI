@@ -29,6 +29,7 @@
         <module>services/orders</module>
         <module>services/catalogs</module>
         <module>api-gateway</module>
+        <module>services/restaurants</module>
     </modules>
 
     <dependencyManagement>

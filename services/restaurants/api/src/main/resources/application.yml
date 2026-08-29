@@ -1,0 +1,42 @@
+server:
+  port: 5003
+
+spring:
+  application:
+    name: restaurants-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/quickbite_restaurants
+    username: quickbite
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/quickbite_restaurants
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        deserialization:
+          trust:
+            all: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: "http://localhost:9411/api/v2/spans"

@@ -1,0 +1,45 @@
+package com.quickbite.restaurants.core.features.creatingrestaurant;
+
+import java.util.UUID;
+
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Component;
+
+import com.quickbite.buildingblocks.mediator.abstractions.ICommandHandler;
+import com.quickbite.restaurants.core.data.RestaurantRepository;
+import com.quickbite.restaurants.core.model.Restaurant;
+import com.quickbite.shared.events.restaurants.RestaurantCreatedV1;
+
+@Component
+public class CreateRestaurantCommandHandler implements ICommandHandler<CreateRestaurantCommand, UUID> {
+
+    private final RestaurantRepository restaurantRepository;
+    private final RabbitTemplate rabbitTemplate;
+
+    public CreateRestaurantCommandHandler(RestaurantRepository restaurantRepository, RabbitTemplate rabbitTemplate) {
+        this.restaurantRepository = restaurantRepository;
+        this.rabbitTemplate = rabbitTemplate;
+    }
+
+    @Override
+    public UUID handle(CreateRestaurantCommand command) {
+        // 1. Map command to entity
+        Restaurant restaurant = new Restaurant();
+        restaurant.setName(command.name());
+        restaurant.setCuisineType(command.cuisineType());
+        restaurant.setAddress(command.address());
+        restaurant.setOpen(command.isOpen());
+
+        // 2. Save to database
+        Restaurant saved = restaurantRepository.save(restaurant);
+
+        // 3. Publish RabbitMQ Event
+        RestaurantCreatedV1 event = new RestaurantCreatedV1(
+                saved.getId(),
+                saved.getName(),
+                saved.getCuisineType());
+        rabbitTemplate.convertAndSend("restaurant.exchange", "restaurant.created", event);
+
+        return saved.getId();
+    }
+}

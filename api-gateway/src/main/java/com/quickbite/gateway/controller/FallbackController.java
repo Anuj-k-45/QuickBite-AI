@@ -21,4 +21,10 @@ public class FallbackController {
         return Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body("{\"error\": \"Order Service is currently unavailable. Please try again later! (Fallback Triggered)\"}"));
     }
+    
+    @GetMapping("/fallback/restaurants")
+    public ResponseEntity<String> restaurantFallback() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("Restaurant Service is currently unavailable. Please try again later!");
+    }
 }

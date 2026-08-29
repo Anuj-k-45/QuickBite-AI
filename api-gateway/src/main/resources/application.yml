@@ -43,6 +43,22 @@ spring:
                 redis-rate-limiter.requestedTokens: 1
                 key-resolver: "#{@ipKeyResolver}"
 
+        - id: restaurants-service
+          uri: http://localhost:5003
+          predicates:
+            - Path=/api/v1/restaurants, /api/v1/restaurants/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: restaurantServiceCircuitBreaker
+                fallbackUri: forward:/fallback/restaurants
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 4
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+
 management:
   endpoints:
     web:
@@ -62,6 +78,12 @@ resilience4j:
         waitDurationInOpenState: 10s
         permittedNumberOfCallsInHalfOpenState: 2
       orderServiceCircuitBreaker:
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 2
+      restaurantServiceCircuitBreaker:
         slidingWindowSize: 5
         minimumNumberOfCalls: 3
         failureRateThreshold: 50
