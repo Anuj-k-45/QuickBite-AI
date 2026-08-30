@@ -19,9 +19,17 @@ public class Restaurant {
     @Column(nullable = false)
     private String name;
 
+    private String description;
     private String cuisineType;
     private String address;
-    private boolean isOpen;
+    private String phoneNumber;
+
+    @Column(name = "owner_phone")
+    private String ownerPhone;
+
+    @Column(name = "is_open", nullable = true)
+    private boolean isOpen = true;
+
     private LocalDateTime createdAt;
 
     @PrePersist
@@ -51,6 +59,14 @@ public class Restaurant {
         this.name = name;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public String getCuisineType() {
         return cuisineType;
     }
@@ -67,11 +83,27 @@ public class Restaurant {
         this.address = address;
     }
 
-    public boolean isOpen() {
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public String getOwnerPhone() {
+        return ownerPhone;
+    }
+
+    public void setOwnerPhone(String ownerPhone) {
+        this.ownerPhone = ownerPhone;
+    }
+
+    public boolean isActive() {
         return isOpen;
     }
 
-    public void setOpen(boolean open) {
+    public void setActive(boolean open) {
         this.isOpen = open;
     }
 

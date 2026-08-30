@@ -25,6 +25,12 @@ spring:
     username: guest
     password: guest
 
+app:
+  jwt:
+    secret: 404E63F266436A576E5A7234743777217A25432A462D4A614E645267556B5870
+    expiration: 86400000 # 24 Hours in milliseconds
+
+
 # Actuator & Observability Configuration
 management:
   metrics:

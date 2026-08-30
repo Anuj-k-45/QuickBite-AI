@@ -18,7 +18,7 @@ public class RestaurantProjectionConsumer {
     public void handleRestaurantCreated(RestaurantCreatedV1 event) {
         try {
             RestaurantReadModel readModel = new RestaurantReadModel(
-                    event.getRestaurantId(),
+                    event.getId(),
                     event.getName(),
                     event.getCuisineType(),
                     null, // address can be updated or fetched if added to event later

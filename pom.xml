@@ -30,6 +30,7 @@
         <module>services/catalogs</module>
         <module>api-gateway</module>
         <module>services/restaurants</module>
+        <module>services/users</module>
     </modules>
 
     <dependencyManagement>

@@ -1,0 +1,29 @@
+server:
+  port: 5004
+
+spring:
+  application:
+    name: users-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/quickbite_users
+    username: quickbite
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+app:
+  jwt:
+    secret: 2a48518d7ceebe18b2c0f0e45222d3e956d02824ba4193b30293a60537c8bced9064ead4c1ac0d26
+    expiration: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info

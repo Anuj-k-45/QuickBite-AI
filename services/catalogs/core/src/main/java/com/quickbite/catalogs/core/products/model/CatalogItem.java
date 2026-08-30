@@ -16,6 +16,9 @@ public class CatalogItem {
     @Id
     private UUID id;
 
+    @Column(name = "restaurant_id", nullable = false)
+    private UUID restaurantId;
+
     @Column(nullable = false)
     private String name;
 
@@ -30,21 +33,13 @@ public class CatalogItem {
     @Column(nullable = false)
     private boolean active;
 
+    @Column(name = "is_available", nullable = false)
+    private boolean available = true;
+
     @Column(nullable = false)
     private Instant createdAt;
 
     public CatalogItem() {
-    }
-
-    public CatalogItem(UUID id, String name, String description, BigDecimal price, String category, boolean active,
-            Instant createdAt) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.price = price;
-        this.category = category;
-        this.active = active;
-        this.createdAt = createdAt;
     }
 
     public UUID getId() {
@@ -53,6 +48,14 @@ public class CatalogItem {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public UUID getRestaurantId() {
+        return restaurantId;
+    }
+
+    public void setRestaurantId(UUID restaurantId) {
+        this.restaurantId = restaurantId;
     }
 
     public String getName() {
@@ -93,6 +96,14 @@ public class CatalogItem {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
     }
 
     public Instant getCreatedAt() {
