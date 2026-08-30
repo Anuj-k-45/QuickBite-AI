@@ -1,9 +1,9 @@
 package com.quickbite.catalogs.api.controllers;
 
+import com.quickbite.buildingblocks.mediator.abstractions.Mediator;
+import com.quickbite.catalogs.core.products.features.addingitem.AddCatalogItemCommand;
+import com.quickbite.catalogs.core.products.features.updatingitem.UpdateCatalogItemCommand;
 import com.quickbite.catalogs.core.products.model.CatalogItem;
-import com.quickbite.catalogs.core.products.data.CatalogItemRepository;
-import com.quickbite.catalogs.core.products.data.RestaurantRefRepository;
-import com.quickbite.catalogs.core.products.model.RestaurantRef;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,79 +13,59 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/items")
+@RequestMapping("/api/v1/owner/restaurants")
 public class OwnerCatalogController {
 
-    private final CatalogItemRepository catalogItemRepository;
-    private final RestaurantRefRepository restaurantRefRepository;
+    private final Mediator mediator;
 
-    public OwnerCatalogController(CatalogItemRepository catalogItemRepository,
-            RestaurantRefRepository restaurantRefRepository) {
-        this.catalogItemRepository = catalogItemRepository;
-        this.restaurantRefRepository = restaurantRefRepository;
+    public OwnerCatalogController(Mediator mediator) {
+        this.mediator = mediator;
     }
 
-    // Helper method for authorization
-    private void validateRestaurantOwnership(UUID restaurantId, UserDetails userDetails) {
-        String loggedInPhone = userDetails.getUsername(); // JWT Subject is the phone number
-
-        RestaurantRef restaurant = restaurantRefRepository.findById(restaurantId)
-                .orElseThrow(() -> new RuntimeException("Restaurant not found"));
-
-        if (restaurant.getOwnerPhone() == null || !restaurant.getOwnerPhone().equals(loggedInPhone)) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "Unauthorized: You do not own this restaurant.");
-        }
-    }
-
-    @PostMapping("/{restaurantId}/menu/items")
+    @PostMapping("/{restaurantId}/catalog/items")
     public ResponseEntity<CatalogItem> addMenuItem(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID restaurantId,
             @Valid @RequestBody CatalogItemRequest request) {
 
-        // 1. Verify ownership using the restaurantId from the route path
-        validateRestaurantOwnership(restaurantId, userDetails);
+        String loggedInPhone = userDetails != null ? userDetails.getUsername() : null;
 
-        // 2. Proceed to save item
-        CatalogItem item = new CatalogItem();
-        item.setId(UUID.randomUUID());
-        item.setRestaurantId(restaurantId);
-        item.setName(request.getName());
-        item.setDescription(request.getDescription());
-        item.setPrice(request.getPrice());
-        item.setCategory(request.getCategory());
-        item.setActive(true);
-        item.setCreatedAt(Instant.now());
+        AddCatalogItemCommand command = new AddCatalogItemCommand(
+                restaurantId,
+                request.getName(),
+                request.getDescription(),
+                request.getPrice(),
+                request.getCategory(),
+                request.isActive(),
+                loggedInPhone);
 
-        CatalogItem saved = catalogItemRepository.save(item);
+        CatalogItem saved = mediator.send(command);
         return ResponseEntity.ok(saved);
     }
 
-    @PutMapping("/{restaurantId}/menu/items/{itemId}")
+    @PutMapping("/{restaurantId}/catalog/items/{itemId}")
     public ResponseEntity<CatalogItem> updateMenuItem(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID restaurantId,
             @PathVariable UUID itemId,
             @Valid @RequestBody CatalogItemRequest request) {
 
-        // 1. Verify ownership using the restaurantId from the route path
-        validateRestaurantOwnership(restaurantId, userDetails);
+        String loggedInPhone = userDetails != null ? userDetails.getUsername() : null;
 
-        CatalogItem item = catalogItemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Catalog item not found"));
+        UpdateCatalogItemCommand command = new UpdateCatalogItemCommand(
+                restaurantId,
+                itemId,
+                request.getName(),
+                request.getDescription(),
+                request.getPrice(),
+                request.getCategory(),
+                request.isActive(),
+                loggedInPhone);
 
-        item.setName(request.getName());
-        item.setDescription(request.getDescription());
-        item.setPrice(request.getPrice());
-        item.setCategory(request.getCategory());
-        item.setActive(request.isActive());
-
-        CatalogItem updated = catalogItemRepository.save(item);
+        CatalogItem updated = mediator.send(command);
         return ResponseEntity.ok(updated);
     }
 
@@ -99,7 +79,6 @@ public class OwnerCatalogController {
         private String category;
         private boolean active = true;
 
-        // Getters and Setters
         public String getName() {
             return name;
         }

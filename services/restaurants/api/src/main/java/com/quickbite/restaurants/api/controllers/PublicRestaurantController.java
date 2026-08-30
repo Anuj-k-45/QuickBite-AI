@@ -1,7 +1,9 @@
 package com.quickbite.restaurants.api.controllers;
 
+import com.quickbite.buildingblocks.mediator.abstractions.Mediator;
+import com.quickbite.restaurants.core.features.gettingrestaurants.GetActiveRestaurantsQuery;
+import com.quickbite.restaurants.core.features.gettingrestaurants.GetRestaurantByIdQuery;
 import com.quickbite.restaurants.core.model.Restaurant;
-import com.quickbite.restaurants.core.data.RestaurantRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,22 +14,21 @@ import java.util.UUID;
 @RequestMapping("/api/v1/restaurants")
 public class PublicRestaurantController {
 
-    private final RestaurantRepository restaurantRepository;
+    private final Mediator mediator;
 
-    public PublicRestaurantController(RestaurantRepository restaurantRepository) {
-        this.restaurantRepository = restaurantRepository;
+    public PublicRestaurantController(Mediator mediator) {
+        this.mediator = mediator;
     }
 
     @GetMapping
     public ResponseEntity<List<Restaurant>> getAllActiveRestaurants() {
-        List<Restaurant> restaurants = restaurantRepository.findByIsOpenTrue();
+        List<Restaurant> restaurants = mediator.send(new GetActiveRestaurantsQuery());
         return ResponseEntity.ok(restaurants);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Restaurant> getRestaurantById(@PathVariable UUID id) {
-        Restaurant restaurant = restaurantRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurant not found"));
+        Restaurant restaurant = mediator.send(new GetRestaurantByIdQuery(id));
         return ResponseEntity.ok(restaurant);
     }
 }

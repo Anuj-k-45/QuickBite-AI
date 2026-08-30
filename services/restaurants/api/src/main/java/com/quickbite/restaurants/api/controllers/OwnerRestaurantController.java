@@ -2,7 +2,7 @@ package com.quickbite.restaurants.api.controllers;
 
 import com.quickbite.buildingblocks.mediator.abstractions.Mediator;
 import com.quickbite.restaurants.core.features.creatingrestaurant.CreateRestaurantCommand;
-import com.quickbite.restaurants.core.model.Restaurant;
+import com.quickbite.restaurants.core.features.updaterestaurant.UpdateRestaurantCommand;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +27,6 @@ public class OwnerRestaurantController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody RestaurantRequest request) {
 
-        // Extract owner phone from JWT principal (username field holds the phone
-        // number)
         String ownerPhone = userDetails != null ? userDetails.getUsername() : null;
 
         CreateRestaurantCommand command = new CreateRestaurantCommand(
@@ -42,6 +40,27 @@ public class OwnerRestaurantController {
 
         UUID restaurantId = mediator.send(command);
         return ResponseEntity.ok(restaurantId);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updateRestaurant(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID id,
+            @Valid @RequestBody RestaurantRequest request) {
+
+        String ownerPhone = userDetails != null ? userDetails.getUsername() : null;
+
+        UpdateRestaurantCommand command = new UpdateRestaurantCommand(
+                id,
+                request.getName(),
+                request.getCuisineType(),
+                request.getAddress(),
+                request.getDescription(),
+                request.getPhoneNumber(),
+                ownerPhone);
+
+        mediator.send(command);
+        return ResponseEntity.ok().build();
     }
 
     public static class RestaurantRequest {

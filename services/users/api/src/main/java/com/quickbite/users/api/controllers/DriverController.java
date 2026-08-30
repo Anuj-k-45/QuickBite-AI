@@ -1,9 +1,10 @@
 package com.quickbite.users.api.controllers;
 
+import com.quickbite.buildingblocks.mediator.abstractions.Mediator;
+import com.quickbite.users.core.features.registerdriver.RegisterDriverCommand;
+import com.quickbite.users.core.features.toggledriverstatus.ToggleDriverStatusCommand;
+import com.quickbite.users.core.features.updatedriverlocation.UpdateDriverLocationCommand;
 import com.quickbite.users.core.model.DriverProfile;
-import com.quickbite.users.core.data.DriverProfileRepository;
-import com.quickbite.users.core.data.UserRepository;
-import com.quickbite.users.core.model.User;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
@@ -15,12 +16,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/drivers")
 public class DriverController {
 
-    private final DriverProfileRepository driverRepository;
-    private final UserRepository userRepository;
+    private final Mediator mediator;
 
-    public DriverController(DriverProfileRepository driverRepository, UserRepository userRepository) {
-        this.driverRepository = driverRepository;
-        this.userRepository = userRepository;
+    public DriverController(Mediator mediator) {
+        this.mediator = mediator;
     }
 
     @PostMapping("/profile")
@@ -28,19 +27,13 @@ public class DriverController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody DriverRegisterRequest request) {
 
-        User user = userRepository.findByPhoneNumber(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        RegisterDriverCommand command = new RegisterDriverCommand(
+                userDetails.getUsername(),
+                request.getVehicleType(),
+                request.getVehicleNumber(),
+                request.getLicenseNumber());
 
-        DriverProfile profile = driverRepository.findByUserId(user.getId())
-                .orElse(new DriverProfile());
-
-        profile.setUserId(user.getId());
-        profile.setVehicleType(request.getVehicleType());
-        profile.setVehicleNumber(request.getVehicleNumber());
-        profile.setLicenseNumber(request.getLicenseNumber());
-        profile.setVerified(false);
-
-        DriverProfile saved = driverRepository.save(profile);
+        DriverProfile saved = mediator.send(command);
         return ResponseEntity.ok(saved);
     }
 
@@ -49,14 +42,8 @@ public class DriverController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody StatusRequest request) {
 
-        User user = userRepository.findByPhoneNumber(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        DriverProfile profile = driverRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Driver profile not found"));
-
-        profile.setOnline(request.isOnline());
-        DriverProfile updated = driverRepository.save(profile);
+        DriverProfile updated = mediator
+                .send(new ToggleDriverStatusCommand(userDetails.getUsername(), request.isOnline()));
         return ResponseEntity.ok(updated);
     }
 
@@ -65,16 +52,8 @@ public class DriverController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody LocationRequest request) {
 
-        User user = userRepository.findByPhoneNumber(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        DriverProfile profile = driverRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Driver profile not found"));
-
-        profile.setCurrentLatitude(request.getLatitude());
-        profile.setCurrentLongitude(request.getLongitude());
-        driverRepository.save(profile);
-
+        mediator.send(new UpdateDriverLocationCommand(userDetails.getUsername(), request.getLatitude(),
+                request.getLongitude()));
         return ResponseEntity.ok().build();
     }
 

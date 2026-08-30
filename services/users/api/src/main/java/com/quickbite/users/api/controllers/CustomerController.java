@@ -1,28 +1,25 @@
 package com.quickbite.users.api.controllers;
 
+import com.quickbite.buildingblocks.mediator.abstractions.Mediator;
+import com.quickbite.users.core.features.addaddress.AddAddressCommand;
+import com.quickbite.users.core.features.getaddresses.GetCustomerAddressesQuery;
 import com.quickbite.users.core.model.CustomerAddress;
-import com.quickbite.users.core.data.CustomerAddressRepository;
-import com.quickbite.users.core.data.UserRepository;
-import com.quickbite.users.core.model.User;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/customers")
 public class CustomerController {
 
-    private final CustomerAddressRepository addressRepository;
-    private final UserRepository userRepository;
+    private final Mediator mediator;
 
-    public CustomerController(CustomerAddressRepository addressRepository, UserRepository userRepository) {
-        this.addressRepository = addressRepository;
-        this.userRepository = userRepository;
+    public CustomerController(Mediator mediator) {
+        this.mediator = mediator;
     }
 
     @PostMapping("/addresses")
@@ -30,30 +27,24 @@ public class CustomerController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AddressRequest request) {
 
-        User user = userRepository.findByPhoneNumber(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        AddAddressCommand command = new AddAddressCommand(
+                userDetails.getUsername(),
+                request.getAddressLine(),
+                request.getLandmark(),
+                request.getCity(),
+                request.getPincode(),
+                request.getLatitude(),
+                request.getLongitude(),
+                request.getTag(),
+                request.isDefault());
 
-        CustomerAddress address = new CustomerAddress();
-        address.setCustomerId(user.getId());
-        address.setAddressLine(request.getAddressLine());
-        address.setLandmark(request.getLandmark());
-        address.setCity(request.getCity());
-        address.setPincode(request.getPincode());
-        address.setLatitude(request.getLatitude());
-        address.setLongitude(request.getLongitude());
-        address.setTag(request.getTag() != null ? request.getTag() : "HOME");
-        address.setDefault(request.isDefault());
-
-        CustomerAddress saved = addressRepository.save(address);
+        CustomerAddress saved = mediator.send(command);
         return ResponseEntity.ok(saved);
     }
 
     @GetMapping("/addresses")
     public ResponseEntity<List<CustomerAddress>> getAddresses(@AuthenticationPrincipal UserDetails userDetails) {
-        User user = userRepository.findByPhoneNumber(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        List<CustomerAddress> addresses = addressRepository.findByCustomerId(user.getId());
+        List<CustomerAddress> addresses = mediator.send(new GetCustomerAddressesQuery(userDetails.getUsername()));
         return ResponseEntity.ok(addresses);
     }
 
@@ -70,7 +61,6 @@ public class CustomerController {
         private String tag;
         private boolean isDefault;
 
-        // Getters and Setters
         public String getAddressLine() {
             return addressLine;
         }
