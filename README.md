@@ -204,12 +204,6 @@ A tiny module holding the **cross-service event contracts** (the "wire format" o
 
 Versioned event names (`V1` suffix) allow the schema to evolve without breaking existing consumers.
 
-<p align="center">
-  <img src="./assets/service-map.png" alt="Service Dependency Map" width="85%" />
-  <br/>
-  <i>📌 Placeholder — insert service dependency map (who depends on building-blocks/shared, who publishes/consumes what) here</i>
-</p>
-
 ---
 
 ## 🌐 Ports & Endpoints Reference
@@ -232,12 +226,6 @@ Versioned event names (`V1` suffix) allow the schema to evolve without breaking 
 
 > [!IMPORTANT]
 > Currently the API Gateway routes **`catalogs-service`**, **`orders-service`**, and **`restaurants-service`**. The **`users-service`** is not yet wired into the Gateway's route table — see [Roadmap](#-roadmap).
-
-<p align="center">
-  <img src="./assets/ports-topology.png" alt="Ports & Network Topology" width="85%" />
-  <br/>
-  <i>📌 Placeholder — insert network/ports topology diagram here</i>
-</p>
 
 ---
 
@@ -324,12 +312,6 @@ This guarantees **at-least-once delivery** even if RabbitMQ is temporarily down 
 - **Read side**: denormalized MongoDB documents built asynchronously by **Projection Consumers** listening on RabbitMQ — optimized purely for fast reads, decoupled from the write schema.
 - Each database is **logically isolated per service** even though, in local development, they share one Postgres/MongoDB container for convenience.
 
-<p align="center">
-  <img src="./assets/data-architecture.png" alt="Data Architecture Diagram" width="85%" />
-  <br/>
-  <i>📌 Placeholder — insert polyglot persistence / per-service DB diagram here</i>
-</p>
-
 ---
 
 ## 🔐 Security Architecture
@@ -365,12 +347,6 @@ QuickBite AI ships with a full three-pillar observability setup out of the box:
 | **Tracing** | Zipkin + Micrometer Tracing (OpenTelemetry bridge) | 100% trace sampling in local dev; trace/span IDs injected directly into console log patterns |
 | **Logging** | SLF4J / Logback console appender | Structured console logs with `[traceId, spanId]` correlation for every request |
 | **Health** | Spring Boot Actuator | `health`, `info`, `metrics`, `prometheus`, and (on the Gateway) `gateway` endpoints exposed |
-
-<p align="center">
-  <img src="./assets/observability-dashboard.png" alt="Grafana / Zipkin Dashboard" width="90%" />
-  <br/>
-  <i>📌 Placeholder — insert Grafana dashboard / Zipkin trace screenshot here</i>
-</p>
 
 ---
 
@@ -420,12 +396,6 @@ QuickBite AI ships with a full three-pillar observability setup out of the box:
 
 **Containerization**
 - ✔️ **Docker & Docker Compose** — one-command infrastructure bring-up for every dependency
-
-<p align="center">
-  <img src="./assets/tech-stack.png" alt="Tech Stack Overview" width="85%" />
-  <br/>
-  <i>📌 Placeholder — insert tech-stack / logo wall image here</i>
-</p>
 
 ---
 
@@ -545,12 +515,6 @@ Run each Spring Boot application (in separate terminals):
 | Zipkin Traces | `http://localhost:9411` |
 | Prometheus | `http://localhost:9090` |
 | Grafana | `http://localhost:3000` (admin / admin) |
-
-<p align="center">
-  <img src="./assets/swagger-preview.png" alt="Swagger UI Preview" width="85%" />
-  <br/>
-  <i>📌 Placeholder — insert Swagger UI screenshot here</i>
-</p>
 
 ---
 
