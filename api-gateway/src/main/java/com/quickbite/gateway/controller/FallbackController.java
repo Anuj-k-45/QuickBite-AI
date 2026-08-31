@@ -10,6 +10,12 @@ import reactor.core.publisher.Mono;
 @RestController
 public class FallbackController {
 
+    @GetMapping("/fallback/users")
+    public Mono<ResponseEntity<String>> userFallback() {
+        return Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("{\"error\": \"Users Service is currently unavailable. Please try again later! (Fallback Triggered)\"}"));
+    }
+
     @GetMapping("/fallback/catalogs")
     public Mono<ResponseEntity<String>> catalogFallback() {
         return Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
@@ -21,10 +27,10 @@ public class FallbackController {
         return Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body("{\"error\": \"Order Service is currently unavailable. Please try again later! (Fallback Triggered)\"}"));
     }
-    
+
     @GetMapping("/fallback/restaurants")
-    public ResponseEntity<String> restaurantFallback() {
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body("Restaurant Service is currently unavailable. Please try again later!");
+    public Mono<ResponseEntity<String>> restaurantFallback() {
+        return Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("{\"error\": \"Restaurants Service is currently unavailable. Please try again later! (Fallback Triggered)\"}"));
     }
 }

@@ -1,5 +1,10 @@
 server:
   port: 5001
+  error:
+    include-message: always
+    include-binding-errors: always
+    whitelabel:
+      enabled: false
 
 spring:
   application:

@@ -1,5 +1,10 @@
 server:
   port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+    whitelabel:
+      enabled: false
 
 spring:
   application:
@@ -11,22 +16,25 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: users-service
+          uri: http://localhost:5004
+          predicates:
+            - Path=/api/v1/auth/**, /api/v1/users/**, /api/v1/customers/**, /api/v1/drivers/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/users
+
         - id: catalogs-service
           uri: http://localhost:5002
           predicates:
-            - Path=/api/v1/catalogs, /api/v1/catalogs/**
+            - Path=/api/v1/catalogs/**, /api/v1/owner/restaurants/**
           filters:
             - name: CircuitBreaker
               args:
                 name: catalogServiceCircuitBreaker
                 fallbackUri: forward:/fallback/catalogs
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 2 # How many requests allowed per second
-                redis-rate-limiter.burstCapacity: 4 # Max spike capacity allowed in a single burst
-                redis-rate-limiter.requestedTokens: 1 # Tokens consumed per request
-                key-resolver: "#{@ipKeyResolver}" # Identifies clients by IP address
-
         - id: orders-service
           uri: http://localhost:5001
           predicates:
@@ -71,6 +79,12 @@ management:
 resilience4j:
   circuitbreaker:
     instances:
+      userServiceCircuitBreaker:
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 2
       catalogServiceCircuitBreaker:
         slidingWindowSize: 5
         minimumNumberOfCalls: 3
