@@ -1,22 +1,32 @@
 package com.quickbite.catalogs.api.controllers;
 
+import java.math.BigDecimal;
+import java.util.UUID;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.quickbite.buildingblocks.mediator.abstractions.Mediator;
 import com.quickbite.catalogs.core.products.features.addingitem.AddCatalogItemCommand;
 import com.quickbite.catalogs.core.products.features.updatingitem.UpdateCatalogItemCommand;
 import com.quickbite.catalogs.core.products.model.CatalogItem;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/owner/restaurants")
+@Tag(name = "Owner Catalog API", description = "Restaurant owner menu and item management")
 public class OwnerCatalogController {
 
     private final Mediator mediator;
@@ -26,6 +36,7 @@ public class OwnerCatalogController {
     }
 
     @PostMapping("/{restaurantId}/catalog/items")
+    @Operation(summary = "Add a menu item to a restaurant catalog")
     public ResponseEntity<CatalogItem> addMenuItem(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID restaurantId,
@@ -47,6 +58,7 @@ public class OwnerCatalogController {
     }
 
     @PutMapping("/{restaurantId}/catalog/items/{itemId}")
+    @Operation(summary = "Update an existing catalog menu item")
     public ResponseEntity<CatalogItem> updateMenuItem(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID restaurantId,
