@@ -1,7 +1,7 @@
 # 🍔 QuickBite AI — Food Delivery Microservices Platform
 
 <p align="center">
-  <img src="./assets/banner.png" alt="QuickBite AI Banner" width="100%" />
+  <img src="./assets/Banner.png" alt="QuickBite AI Banner" width="100%" />
 </p>
 
 <p align="center">
@@ -59,6 +59,7 @@ If this project helped you understand microservices architecture, please conside
     - [2. Build the Modules](#2-build-the-modules)
     - [3. Run the Services](#3-run-the-services)
     - [4. Explore](#4-explore)
+  - [🔮 Future Vision — Planned Architecture](#-future-vision--planned-architecture)
   - [🗺️ Roadmap](#️-roadmap)
   - [🤝 Contribution](#-contribution)
   - [📜 License](#-license)
@@ -77,9 +78,9 @@ QuickBite AI simulates the backend of a real-world food delivery app — custome
 - The whole system is **observable end-to-end** with distributed tracing, metrics, and dashboards.
 
 <p align="center">
-  <img src="./assets/system-overview.png" alt="System Overview Diagram" width="90%" />
+  <img src="./assets/Overall_Arch.png" alt="System Overview Diagram" width="90%" />
   <br/>
-  <i>📌 Placeholder — insert full system overview / context diagram here</i>
+  <i>Client → API Gateway → four core services → data layer (PostgreSQL + MongoDB) → RabbitMQ event bus → observability stack</i>
 </p>
 
 ---
@@ -114,9 +115,9 @@ Internally, each microservice is **fully autonomous**:
 - Can be built, tested, deployed, and scaled independently
 
 <p align="center">
-  <img src="./assets/architecture-diagram.png" alt="Architecture Diagram" width="90%" />
+  <img src="./assets/Detailed_Design.png" alt="Detailed Architecture Diagram" width="90%" />
   <br/>
-  <i>📌 Placeholder — insert detailed architecture diagram (Gateway → Services → DBs → RabbitMQ → Observability) here</i>
+  <i>Full layered view — Client, Gateway, Service, Data & Messaging, and Observability layers with every port and event labeled</i>
 </p>
 
 The **CQRS** side of the architecture looks like this per service:
@@ -131,9 +132,9 @@ The **CQRS** side of the architecture looks like this per service:
 ```
 
 <p align="center">
-  <img src="./assets/cqrs-flow.png" alt="CQRS + Outbox Flow Diagram" width="85%" />
+  <img src="./assets/Outbox.png" alt="CQRS + Outbox Flow Diagram" width="85%" />
   <br/>
-  <i>📌 Placeholder — insert CQRS + Outbox + Projection sequence diagram here</i>
+  <i>Write path (Command → PostgreSQL + Outbox in one transaction → scheduled relay → RabbitMQ) and Read path (Query → MongoDB Read Model)</i>
 </p>
 
 ---
@@ -303,9 +304,9 @@ Every publish happens through the **Outbox Pattern**:
 This guarantees **at-least-once delivery** even if RabbitMQ is temporarily down when the transaction commits.
 
 <p align="center">
-  <img src="./assets/event-flow.png" alt="Event Flow Diagram" width="90%" />
+  <img src="./assets/RabbitMQ.png" alt="RabbitMQ Event Flow Diagram" width="90%" />
   <br/>
-  <i>📌 Placeholder — insert RabbitMQ exchange/queue/binding diagram here</i>
+  <i>Every exchange, routing key, and queue in the system — including the one cross-service consumption (Catalogs consuming RestaurantCreatedV1)</i>
 </p>
 
 ---
@@ -347,9 +348,9 @@ This guarantees **at-least-once delivery** even if RabbitMQ is temporarily down 
 - **CSRF disabled** (pure stateless REST API, no cookies/browser forms)
 
 <p align="center">
-  <img src="./assets/security-flow.png" alt="JWT Security Flow Diagram" width="80%" />
+  <img src="./assets/JWT.png" alt="JWT Security Flow Diagram" width="80%" />
   <br/>
-  <i>📌 Placeholder — insert JWT auth/authorization sequence diagram here</i>
+  <i>Login flow (credential check → token issuance) and authenticated request flow (token validation → role check → controller)</i>
 </p>
 
 ---
@@ -553,6 +554,53 @@ Run each Spring Boot application (in separate terminals):
 
 ---
 
+## 🔮 Future Vision — Planned Architecture
+
+The current system (4 services + Gateway) is the **foundation**. The diagrams below map out where QuickBite AI is headed once every planned service, ML feature, and platform capability is in place — a full-scale, production-grade food delivery platform.
+
+### Complete Future-State System Architecture
+
+<p align="center">
+  <img src="./assets/PlannedArch.png" alt="Planned Future Architecture" width="95%" />
+  <br/>
+  <i>The full envisioned platform — Client Layer → Edge Layer → Core Business Services → Intelligence/AI Layer → Event Backbone → Data Platform → External Integrations → Platform/Observability, with a numbered end-to-end order journey overlaid</i>
+</p>
+
+### Planned Service Catalog
+
+Every service — existing and planned — organized by category:
+
+<p align="center">
+  <img src="./assets/Planned_Features.png" alt="Planned Service Catalog" width="90%" />
+  <br/>
+  <i>Core Services • Support Services • AI/Intelligence Services • Data & Messaging • Platform — the full component inventory of the target architecture</i>
+</p>
+
+### The AI / Intelligence Layer
+
+The planned ML and LLM-powered layer, all sharing a common real-time Feature Store:
+
+<p align="center">
+  <img src="./assets/Planned_AI_Features.png" alt="Planned AI & Intelligence Layer" width="85%" />
+  <br/>
+  <i>Recommendation Engine, AI Chat Assistant, Nutrition & Calorie Service, Fraud Detection, and Demand Forecasting — all fed by a shared Feature Store built from order history, user behavior events, and restaurant/menu data</i>
+</p>
+
+### The Complete Order Journey (Future State)
+
+What placing an order will look like end-to-end once the full platform is built:
+
+<p align="center">
+  <img src="./assets/Planned_OrderFlow.png" alt="Planned Order Journey Flow" width="95%" />
+  <br/>
+  <i>From AI-personalized browsing through payment, dispatch, route optimization, live tracking, and post-delivery feedback — with fraud screening and support running in parallel</i>
+</p>
+
+> [!NOTE]
+> These future-state diagrams describe the **target architecture**, not the current implementation. See the [Roadmap](#-roadmap) below for what's actually built today versus what's planned.
+
+---
+
 ## 🗺️ Roadmap
 
 | Feature | Status |
@@ -565,8 +613,19 @@ Run each Spring Boot application (in separate terminals):
 | Users Service (auth, customers, drivers) | ✅ Completed |
 | Wire Users Service into API Gateway routes | 🟡 In Progress |
 | Payments Service | ❌ Not Started |
-| Delivery Assignment / Driver Matching Service | ❌ Not Started |
-| Notification Service (push/SMS/email) | ❌ Not Started |
+| Delivery & Dispatch Service | ❌ Not Started |
+| Route Optimization Service (Maps/ETA) | ❌ Not Started |
+| Live Tracking Service (WebSocket) | ❌ Not Started |
+| Notifications Service (push/SMS/email) | ❌ Not Started |
+| Reviews & Ratings Service | ❌ Not Started |
+| Promotions & Coupons Service | ❌ Not Started |
+| Loyalty & Rewards Service | ❌ Not Started |
+| Customer Support Service | ❌ Not Started |
+| Recommendation Engine (ML) | ❌ Not Started |
+| AI Chat Assistant (LLM) | ❌ Not Started |
+| Nutrition & Calorie Service | ❌ Not Started |
+| Fraud Detection Service (ML) | ❌ Not Started |
+| Demand Forecasting Service (ML) | ❌ Not Started |
 | Kubernetes / Helm deployment manifests | ❌ Not Started |
 | CI/CD pipeline (GitHub Actions) | ❌ Not Started |
 | Centralized log aggregation (ELK/Loki) | ❌ Not Started |
