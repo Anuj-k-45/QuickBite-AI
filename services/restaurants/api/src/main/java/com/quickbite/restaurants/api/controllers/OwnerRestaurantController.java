@@ -10,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @RestController
@@ -36,7 +37,10 @@ public class OwnerRestaurantController {
                 request.isOpen(),
                 request.getDescription(),
                 request.getPhoneNumber(),
-                ownerPhone);
+                ownerPhone,
+                request.getImageUrl(),
+                request.getDeliveryTimeMinutes(),
+                request.getCostForTwo());
 
         UUID restaurantId = mediator.send(command);
         return ResponseEntity.ok(restaurantId);
@@ -57,7 +61,10 @@ public class OwnerRestaurantController {
                 request.getAddress(),
                 request.getDescription(),
                 request.getPhoneNumber(),
-                ownerPhone);
+                ownerPhone,
+                request.getImageUrl(),
+                request.getDeliveryTimeMinutes(),
+                request.getCostForTwo());
 
         mediator.send(command);
         return ResponseEntity.ok().build();
@@ -74,6 +81,9 @@ public class OwnerRestaurantController {
         @NotBlank
         private String phoneNumber;
         private boolean isOpen = true;
+        private String imageUrl;
+        private Integer deliveryTimeMinutes = 30;
+        private BigDecimal costForTwo;
 
         public String getName() {
             return name;
@@ -121,6 +131,30 @@ public class OwnerRestaurantController {
 
         public void setOpen(boolean open) {
             isOpen = open;
+        }
+
+        public String getImageUrl() {
+            return imageUrl;
+        }
+
+        public void setImageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
+        }
+
+        public Integer getDeliveryTimeMinutes() {
+            return deliveryTimeMinutes;
+        }
+
+        public void setDeliveryTimeMinutes(Integer deliveryTimeMinutes) {
+            this.deliveryTimeMinutes = deliveryTimeMinutes;
+        }
+
+        public BigDecimal getCostForTwo() {
+            return costForTwo;
+        }
+
+        public void setCostForTwo(BigDecimal costForTwo) {
+            this.costForTwo = costForTwo;
         }
     }
 }

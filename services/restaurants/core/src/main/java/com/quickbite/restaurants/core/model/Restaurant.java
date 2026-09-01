@@ -1,5 +1,6 @@
 package com.quickbite.restaurants.core.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -29,6 +30,20 @@ public class Restaurant {
 
     @Column(name = "is_open", nullable = true)
     private boolean isOpen = true;
+
+    // --- UI Enhancements for Restaurant Cards ---
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "rating")
+    private Double rating = 4.2; // Default starting rating
+
+    @Column(name = "delivery_time_minutes")
+    private Integer deliveryTimeMinutes = 30; // Estimated delivery time
+
+    @Column(name = "cost_for_two")
+    private BigDecimal costForTwo; // e.g., ₹400 for two
+    // -------------------------------------------
 
     private LocalDateTime createdAt;
 
@@ -99,12 +114,53 @@ public class Restaurant {
         this.ownerPhone = ownerPhone;
     }
 
+    public boolean isOpen() {
+        return isOpen;
+    }
+
+    public void setOpen(boolean open) {
+        this.isOpen = open;
+    }
+
+    // Backward-compatible alias for existing code referencing isActive
     public boolean isActive() {
         return isOpen;
     }
 
     public void setActive(boolean open) {
         this.isOpen = open;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this.rating = rating;
+    }
+
+    public Integer getDeliveryTimeMinutes() {
+        return deliveryTimeMinutes;
+    }
+
+    public void setDeliveryTimeMinutes(Integer deliveryTimeMinutes) {
+        this.deliveryTimeMinutes = deliveryTimeMinutes;
+    }
+
+    public BigDecimal getCostForTwo() {
+        return costForTwo;
+    }
+
+    public void setCostForTwo(BigDecimal costForTwo) {
+        this.costForTwo = costForTwo;
     }
 
     public LocalDateTime getCreatedAt() {

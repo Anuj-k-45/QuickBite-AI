@@ -51,7 +51,10 @@ public class OwnerCatalogController {
                 request.getPrice(),
                 request.getCategory(),
                 request.isActive(),
-                loggedInPhone);
+                loggedInPhone,
+                request.getImageUrl(),
+                request.isVeg(),
+                request.isBestseller());
 
         CatalogItem saved = mediator.send(command);
         return ResponseEntity.ok(saved);
@@ -75,7 +78,10 @@ public class OwnerCatalogController {
                 request.getPrice(),
                 request.getCategory(),
                 request.isActive(),
-                loggedInPhone);
+                loggedInPhone,
+                request.getImageUrl(),
+                request.isVeg(),
+                request.isBestseller());
 
         CatalogItem updated = mediator.send(command);
         return ResponseEntity.ok(updated);
@@ -90,6 +96,9 @@ public class OwnerCatalogController {
         @NotBlank
         private String category;
         private boolean active = true;
+        private String imageUrl;
+        private boolean isVeg = true;
+        private boolean bestseller = false;
 
         public String getName() {
             return name;
@@ -129,6 +138,30 @@ public class OwnerCatalogController {
 
         public void setActive(boolean active) {
             this.active = active;
+        }
+
+        public String getImageUrl() {
+            return imageUrl;
+        }
+
+        public void setImageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
+        }
+
+        public boolean isVeg() {
+            return isVeg;
+        }
+
+        public void setVeg(boolean veg) {
+            isVeg = veg;
+        }
+
+        public boolean isBestseller() {
+            return bestseller;
+        }
+
+        public void setBestseller(boolean bestseller) {
+            this.bestseller = bestseller;
         }
     }
 }

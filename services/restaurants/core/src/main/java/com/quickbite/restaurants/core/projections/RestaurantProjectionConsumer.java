@@ -21,9 +21,12 @@ public class RestaurantProjectionConsumer {
                     event.getId(),
                     event.getName(),
                     event.getCuisineType(),
-                    null, // address can be updated or fetched if added to event later
-                    true // default open status
-            );
+                    null,
+                    true,
+                    null,
+                    4.2,
+                    30,
+                    null);
             repository.save(readModel);
             System.out.println("Successfully projected restaurant to MongoDB: " + event.getName());
         } catch (Exception e) {

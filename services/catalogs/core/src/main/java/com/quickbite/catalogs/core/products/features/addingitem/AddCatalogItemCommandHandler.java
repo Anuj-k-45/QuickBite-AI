@@ -39,6 +39,9 @@ public class AddCatalogItemCommandHandler implements ICommandHandler<AddCatalogI
         item.setCategory(command.category());
         item.setActive(command.active());
         item.setCreatedAt(Instant.now());
+        item.setImageUrl(command.imageUrl());
+        item.setVeg(command.isVeg());
+        item.setBestseller(command.bestseller());
 
         return catalogItemRepository.save(item);
     }

@@ -33,14 +33,18 @@ public class CreateCatalogItemCommandHandler
         public CreateCatalogItemResult handle(CreateCatalogItemCommand command) {
                 UUID itemId = UUID.randomUUID();
 
-                // 1. Persist JPA Entity (Write Side using setters)
+                // 1. Persist JPA Entity
                 CatalogItem item = new CatalogItem();
                 item.setId(itemId);
                 item.setName(command.name());
                 item.setDescription(command.description());
                 item.setPrice(command.price());
                 item.setCategory(command.category());
+                item.setImageUrl(command.imageUrl());
+                item.setVeg(command.isVeg());
+                item.setBestseller(command.bestseller());
                 item.setActive(true);
+                item.setAvailable(true);
                 item.setCreatedAt(Instant.now());
 
                 catalogItemRepository.save(item);
@@ -61,6 +65,6 @@ public class CreateCatalogItemCommandHandler
 
                 log.info("[CQRS WRITE] Saved CatalogItem {} and queued Outbox event", itemId);
                 return new CreateCatalogItemResult(itemId, item.getName(), item.getPrice(), item.getCategory(),
-                                item.isActive());
+                                item.isAvailable());
         }
 }

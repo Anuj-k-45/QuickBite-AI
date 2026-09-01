@@ -38,6 +38,9 @@ public class UpdateCatalogItemCommandHandler implements ICommandHandler<UpdateCa
         item.setPrice(command.price());
         item.setCategory(command.category());
         item.setActive(command.active());
+        item.setImageUrl(command.imageUrl());
+        item.setVeg(command.isVeg());
+        item.setBestseller(command.bestseller());
 
         return catalogItemRepository.save(item);
     }

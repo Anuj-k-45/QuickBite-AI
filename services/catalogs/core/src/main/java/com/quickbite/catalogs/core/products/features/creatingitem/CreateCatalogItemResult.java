@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record CreateCatalogItemResult(
-        UUID id,
-        String name,
-        BigDecimal price,
-        String category,
-        boolean available
-) {}
+                UUID id,
+                String name,
+                BigDecimal price,
+                String category,
+                boolean available) {
+}

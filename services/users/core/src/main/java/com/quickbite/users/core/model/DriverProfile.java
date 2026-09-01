@@ -1,16 +1,10 @@
 package com.quickbite.users.core.model;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "driver_profiles")
@@ -24,7 +18,7 @@ public class DriverProfile {
     private UUID userId;
 
     @Column(name = "vehicle_type", nullable = false, length = 50)
-    private String vehicleType;
+    private String vehicleType; // BIKE, SCOOTER, BICYCLE
 
     @Column(name = "vehicle_number", nullable = false, length = 50)
     private String vehicleNumber;
@@ -43,6 +37,12 @@ public class DriverProfile {
 
     @Column(name = "is_verified")
     private boolean isVerified = false;
+
+    @Column(name = "rating")
+    private Double rating = 5.0; // Driver rating out of 5.0
+
+    @Column(name = "total_deliveries")
+    private int totalDeliveries = 0;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -122,6 +122,22 @@ public class DriverProfile {
 
     public void setVerified(boolean verified) {
         isVerified = verified;
+    }
+
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this.rating = rating;
+    }
+
+    public int getTotalDeliveries() {
+        return totalDeliveries;
+    }
+
+    public void setTotalDeliveries(int totalDeliveries) {
+        this.totalDeliveries = totalDeliveries;
     }
 
     public LocalDateTime getCreatedAt() {

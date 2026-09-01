@@ -30,6 +30,17 @@ public class CatalogItem {
     @Column(nullable = false)
     private String category;
 
+    // --- UI Enhancements for Zomato/Swiggy Style Menu ---
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "is_veg", nullable = false)
+    private boolean isVeg = true; // Green vs Red indicator dot
+
+    @Column(name = "is_bestseller", nullable = false)
+    private boolean bestseller = false; // "Bestseller" / "Must Try" badge
+    // ----------------------------------------------------
+
     @Column(nullable = false)
     private boolean active;
 
@@ -41,6 +52,8 @@ public class CatalogItem {
 
     public CatalogItem() {
     }
+
+    // Getters and Setters
 
     public UUID getId() {
         return id;
@@ -88,6 +101,30 @@ public class CatalogItem {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public boolean isVeg() {
+        return isVeg;
+    }
+
+    public void setVeg(boolean veg) {
+        isVeg = veg;
+    }
+
+    public boolean isBestseller() {
+        return bestseller;
+    }
+
+    public void setBestseller(boolean bestseller) {
+        this.bestseller = bestseller;
     }
 
     public boolean isActive() {
