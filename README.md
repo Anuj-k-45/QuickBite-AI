@@ -576,6 +576,7 @@ What placing an order will look like end-to-end once the full platform is built:
 | Orders Service | ✅ Completed |
 | Users Service (auth, customers, drivers) | ✅ Completed |
 | Wire Users Service into API Gateway routes | ✅ Completed |
+| Enhancing Schema and wiring up | 🟡 In Progess |
 | Payments Service | ❌ Not Started |
 | Delivery & Dispatch Service | ❌ Not Started |
 | Route Optimization Service (Maps/ETA) | ❌ Not Started |
