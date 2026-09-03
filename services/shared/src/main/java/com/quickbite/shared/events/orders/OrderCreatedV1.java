@@ -8,6 +8,10 @@ import java.util.UUID;
 public record OrderCreatedV1(
                 UUID orderId,
                 UUID customerId,
+                UUID restaurantId,
+                String deliveryAddress,
+                Double deliveryLatitude,
+                Double deliveryLongitude,
                 BigDecimal totalPrice,
                 String status,
                 List<OrderItemV1> items,

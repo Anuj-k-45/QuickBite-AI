@@ -8,6 +8,10 @@ import java.util.UUID;
 public record OrderDetailsDto(
                 UUID id,
                 UUID customerId,
+                UUID restaurantId,
+                String deliveryAddress,
+                Double deliveryLatitude,
+                Double deliveryLongitude,
                 String status,
                 BigDecimal totalPrice,
                 List<OrderItemDto> items,

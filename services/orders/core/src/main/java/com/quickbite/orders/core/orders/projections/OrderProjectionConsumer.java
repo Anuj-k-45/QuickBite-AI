@@ -38,9 +38,14 @@ public class OrderProjectionConsumer {
                             i.quantity()))
                     .toList();
 
+            // Updated constructor including restaurantId and delivery info
             OrderReadModel readModel = new OrderReadModel(
                     event.orderId(),
                     event.customerId(),
+                    event.restaurantId(),
+                    event.deliveryAddress(),
+                    event.deliveryLatitude(),
+                    event.deliveryLongitude(),
                     event.totalPrice(),
                     event.status(),
                     items,
@@ -61,10 +66,14 @@ public class OrderProjectionConsumer {
             OrderReadModel readModel = repository.findById(event.orderId())
                     .orElseThrow(() -> new RuntimeException("Order read model not found for ID: " + event.orderId()));
 
-            // Construct updated record with the new status
+            // Construct updated record preserving existing data and updating status
             OrderReadModel updatedReadModel = new OrderReadModel(
                     readModel.id(),
                     readModel.customerId(),
+                    readModel.restaurantId(),
+                    readModel.deliveryAddress(),
+                    readModel.deliveryLatitude(),
+                    readModel.deliveryLongitude(),
                     readModel.totalPrice(),
                     event.newStatus(),
                     readModel.items(),

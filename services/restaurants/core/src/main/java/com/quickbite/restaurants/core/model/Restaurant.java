@@ -43,6 +43,12 @@ public class Restaurant {
 
     @Column(name = "cost_for_two")
     private BigDecimal costForTwo; // e.g., ₹400 for two
+
+    @Column(nullable = false)
+    private Double latitude;
+
+    @Column(nullable = false)
+    private Double longitude;
     // -------------------------------------------
 
     private LocalDateTime createdAt;
@@ -169,5 +175,21 @@ public class Restaurant {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }

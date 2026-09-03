@@ -16,6 +16,9 @@ import jakarta.validation.constraints.NotNull;
 public record CreateOrderCommand(
                 UUID customerId,
                 @NotNull(message = "Restaurant ID is required") UUID restaurantId,
+                @NotBlank(message = "Delivery address is required") String deliveryAddress,
+                @NotNull(message = "Delivery latitude is required") Double deliveryLatitude,
+                @NotNull(message = "Delivery longitude is required") Double deliveryLongitude,
                 @NotEmpty(message = "Order must contain at least one item") @Valid List<OrderItemDto> items)
                 implements ICommand<CreateOrderResult> {
 

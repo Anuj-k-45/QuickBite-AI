@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -34,6 +35,8 @@ public class OwnerRestaurantController {
                 request.getName(),
                 request.getCuisineType(),
                 request.getAddress(),
+                request.getLatitude(), // <-- Ensure this is passed
+                request.getLongitude(), // <-- Ensure this is passed
                 request.isOpen(),
                 request.getDescription(),
                 request.getPhoneNumber(),
@@ -78,12 +81,33 @@ public class OwnerRestaurantController {
         private String cuisineType;
         @NotBlank
         private String address;
+        @NotNull(message = "Latitude is required")
+        private Double latitude;
+        @NotNull(message = "Longitude is required")
+        private Double longitude;
         @NotBlank
         private String phoneNumber;
         private boolean isOpen = true;
         private String imageUrl;
         private Integer deliveryTimeMinutes = 30;
         private BigDecimal costForTwo;
+
+        // --- Add Getters and Setters for Latitude & Longitude ---
+        public Double getLatitude() {
+            return latitude;
+        }
+
+        public void setLatitude(Double latitude) {
+            this.latitude = latitude;
+        }
+
+        public Double getLongitude() {
+            return longitude;
+        }
+
+        public void setLongitude(Double longitude) {
+            this.longitude = longitude;
+        }
 
         public String getName() {
             return name;

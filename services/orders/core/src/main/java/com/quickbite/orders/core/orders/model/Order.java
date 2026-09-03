@@ -51,16 +51,30 @@ public class Order {
     @Column(name = "driver_id")
     private UUID driverId;
 
+    @Column(name = "delivery_address", nullable = false)
+    private String deliveryAddress;
+
+    @Column(name = "delivery_latitude", nullable = false)
+    private Double deliveryLatitude;
+
+    @Column(name = "delivery_longitude", nullable = false)
+    private Double deliveryLongitude;
+
     @Version
     private Long version;
 
     protected Order() {
     }
 
-    public Order(UUID id, UUID customerId, UUID restaurantId, OrderStatus status, List<OrderItem> items) {
+    // --- Added Constructor for Geospatial Delivery Information ---
+    public Order(UUID id, UUID customerId, UUID restaurantId, String deliveryAddress, Double deliveryLatitude,
+            Double deliveryLongitude, OrderStatus status, List<OrderItem> items) {
         this.id = id;
         this.customerId = customerId;
         this.restaurantId = restaurantId;
+        this.deliveryAddress = deliveryAddress;
+        this.deliveryLatitude = deliveryLatitude;
+        this.deliveryLongitude = deliveryLongitude;
         this.status = status;
         this.items = items != null ? items : new ArrayList<>();
         this.totalPrice = this.items.stream()
@@ -68,6 +82,11 @@ public class Order {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         this.createdAt = Instant.now();
         this.lastModifiedAt = Instant.now();
+    }
+
+    // Retained old constructor just in case other parts of the code use it
+    public Order(UUID id, UUID customerId, UUID restaurantId, OrderStatus status, List<OrderItem> items) {
+        this(id, customerId, restaurantId, "Default Address", 0.0, 0.0, status, items);
     }
 
     public UUID getId() {
@@ -104,6 +123,18 @@ public class Order {
 
     public UUID getDriverId() {
         return driverId;
+    }
+
+    public String getDeliveryAddress() {
+        return deliveryAddress;
+    }
+
+    public Double getDeliveryLatitude() {
+        return deliveryLatitude;
+    }
+
+    public Double getDeliveryLongitude() {
+        return deliveryLongitude;
     }
 
     public void setDriverId(UUID driverId) {

@@ -27,6 +27,8 @@ public class CreateRestaurantCommandHandler implements ICommandHandler<CreateRes
         restaurant.setName(command.name());
         restaurant.setCuisineType(command.cuisineType());
         restaurant.setAddress(command.address());
+        restaurant.setLatitude(command.latitude()); // <-- Add this setter
+        restaurant.setLongitude(command.longitude()); // <-- Add this setter
         restaurant.setOpen(command.isOpen());
         restaurant.setDescription(command.description());
         restaurant.setPhoneNumber(command.phoneNumber());

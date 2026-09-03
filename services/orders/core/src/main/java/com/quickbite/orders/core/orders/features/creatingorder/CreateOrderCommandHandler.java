@@ -46,9 +46,17 @@ public class CreateOrderCommandHandler implements ICommandHandler<CreateOrderCom
                                 .map(i -> i.getUnitPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                // Instantiate Order matching its actual constructor signature
-                Order order = new Order(orderId, command.customerId(), command.restaurantId(), OrderStatus.PENDING,
+                // Instantiate Order including delivery address and coordinates
+                Order order = new Order(
+                                orderId,
+                                command.customerId(),
+                                command.restaurantId(),
+                                command.deliveryAddress(),
+                                command.deliveryLatitude(),
+                                command.deliveryLongitude(),
+                                OrderStatus.PENDING,
                                 orderItems);
+
                 orderRepository.save(order);
 
                 // Queue event matching OrderCreatedV1 record signature
@@ -60,6 +68,10 @@ public class CreateOrderCommandHandler implements ICommandHandler<CreateOrderCom
                 OrderCreatedV1 event = new OrderCreatedV1(
                                 orderId,
                                 command.customerId(),
+                                command.restaurantId(),
+                                command.deliveryAddress(),
+                                command.deliveryLatitude(),
+                                command.deliveryLongitude(),
                                 totalPrice,
                                 OrderStatus.PENDING.name(),
                                 eventItems,

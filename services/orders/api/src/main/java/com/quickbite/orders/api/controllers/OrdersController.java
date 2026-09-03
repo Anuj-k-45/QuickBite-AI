@@ -54,9 +54,13 @@ public class OrdersController {
 
         UUID customerId = UUID.nameUUIDFromBytes(customerPhone.getBytes());
 
+        // Pass all required fields matching the updated CreateOrderCommand record
         CreateOrderCommand command = new CreateOrderCommand(
                 customerId,
                 requestBody.restaurantId(),
+                requestBody.deliveryAddress(),
+                requestBody.deliveryLatitude(),
+                requestBody.deliveryLongitude(),
                 requestBody.items());
 
         CreateOrderResult result = mediator.send(command);

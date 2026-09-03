@@ -34,6 +34,10 @@ public class GetOrderByIdQueryHandler implements IQueryHandler<GetOrderByIdQuery
                 return new OrderDetailsDto(
                                 readModel.id(),
                                 readModel.customerId(),
+                                readModel.restaurantId(),
+                                readModel.deliveryAddress(),
+                                readModel.deliveryLatitude(),
+                                readModel.deliveryLongitude(),
                                 readModel.status(),
                                 readModel.totalPrice(),
                                 items,
