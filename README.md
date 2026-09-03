@@ -45,6 +45,7 @@ If this project helped you understand microservices architecture, please conside
     - [5. Orders Service](#5-orders-service)
     - [6. Building Blocks (Shared Kernel)](#6-building-blocks-shared-kernel)
     - [7. Shared (Contracts / Events)](#7-shared-contracts--events)
+    - [8. Dispatch Service](#8-dispatch-service)
   - [🌐 Ports \& Endpoints Reference](#-ports--endpoints-reference)
   - [🔌 API Routes — Full Reference](#-api-routes--full-reference)
   - [📡 Event-Driven Communication (RabbitMQ)](#-event-driven-communication-rabbitmq)
@@ -80,14 +81,14 @@ QuickBite AI simulates the backend of a real-world food delivery app — custome
 <p align="center">
   <img src="./assets/Overall_Arch.png" alt="System Overview Diagram" width="90%" />
   <br/>
-  <i>Client → API Gateway → four core services → data layer (PostgreSQL + MongoDB) → RabbitMQ event bus → observability stack</i>
+  <i>Client → API Gateway → five core services → data layer (PostgreSQL + MongoDB) → RabbitMQ event bus → observability stack</i>
 </p>
 
 ---
 
 ## ✨ Key Features
 
-- ✅ **Microservices Architecture** — 4 independently deployable business services (`users`, `restaurants`, `catalogs`, `orders`) + 1 API Gateway
+- ✅ **Microservices Architecture** — 5 independently deployable business services (`users`, `restaurants`, `catalogs`, `orders`, `dispatch`) + 1 API Gateway
 - ✅ **Vertical Slice Architecture** — each feature (command/query) is a self-contained folder: request → handler → data access, instead of horizontal service/repository/controller layers
 - ✅ **CQRS Pattern** implemented on a **hand-rolled Mediator** (`building-blocks/mediator`) — no third-party MediatR-style library, fully custom `ICommand`, `IQuery`, `ICommandHandler`, `IQueryHandler`, and Pipeline Behaviors
 - ✅ **Domain-Driven Design** primitives — `AggregateRoot`, `Entity` base classes in the shared kernel
@@ -109,6 +110,7 @@ QuickBite AI simulates the backend of a real-world food delivery app — custome
 All external traffic flows through **one public entry point — the API Gateway**. Clients never talk to a microservice directly. The Gateway resolves the target service by path, applies rate-limiting and circuit-breaking, and reverse-proxies the request.
 
 Internally, each microservice is **fully autonomous**:
+
 - Owns its **own schema/database** (no shared DB across services)
 - Exposes its own REST API + Swagger docs
 - Publishes/consumes **domain events** over RabbitMQ instead of making synchronous calls to its siblings
@@ -142,6 +144,7 @@ The **CQRS** side of the architecture looks like this per service:
 ## 🧩 Microservices Breakdown
 
 ### 1. API Gateway
+
 The single public-facing entry point into the system.
 
 - **Framework**: Spring Cloud Gateway (reactive, Netty-based)
@@ -150,6 +153,7 @@ The single public-facing entry point into the system.
 - **Module**: `api-gateway`
 
 ### 2. Users Service
+
 Handles authentication, customer profiles, addresses, and driver profiles/status.
 
 - **Sub-modules**: `users-api` (REST layer), `users-core` (domain + CQRS handlers)
@@ -158,6 +162,7 @@ Handles authentication, customer profiles, addresses, and driver profiles/status
 - **Responsibilities**: registration/login (JWT issuance), customer address book, driver onboarding, driver online/offline toggling, live driver location updates
 
 ### 3. Restaurants Service
+
 Restaurant onboarding and directory management for both the public app and restaurant owners.
 
 - **Sub-modules**: `restaurants-api`, `restaurants-core`
@@ -167,6 +172,7 @@ Restaurant onboarding and directory management for both the public app and resta
 - **Responsibilities**: restaurant creation/updates by owners, public browsing of active restaurants
 
 ### 4. Catalogs Service
+
 Menu / catalog-item management per restaurant.
 
 - **Sub-modules**: `catalogs-api`, `catalogs-core`
@@ -177,6 +183,7 @@ Menu / catalog-item management per restaurant.
 - **Responsibilities**: adding/updating menu items, serving a restaurant's full public catalog
 
 ### 5. Orders Service
+
 Order placement and order-status read models.
 
 - **Sub-modules**: `orders-api`, `orders-core`
@@ -186,6 +193,7 @@ Order placement and order-status read models.
 - **Responsibilities**: placing new orders, retrieving order details from the projected read model
 
 ### 6. Building Blocks (Shared Kernel)
+
 A library module (not a running service) consumed by every microservice.
 
 - **Mediator framework**: `Mediator`, `ICommand`, `IQuery`, `ICommandHandler`, `IQueryHandler`, `IPipelineBehavior` — a custom, lightweight CQRS dispatcher
@@ -196,6 +204,7 @@ A library module (not a running service) consumed by every microservice.
 - **Exceptions**: `ValidationException`
 
 ### 7. Shared (Contracts / Events)
+
 A tiny module holding the **cross-service event contracts** (the "wire format" of the event bus):
 
 - `OrderCreatedV1`
@@ -204,28 +213,41 @@ A tiny module holding the **cross-service event contracts** (the "wire format" o
 
 Versioned event names (`V1` suffix) allow the schema to evolve without breaking existing consumers.
 
+### 8. Dispatch Service
+
+Real-time driver matching and assignment — the system's geospatial "brain." Unlike the other services, it's **purely event-driven**: no REST controllers, no client-facing API.
+
+- **Sub-modules**: `dispatch-api` (RabbitMQ listeners + Spring config), `dispatch-core` (Mediator command + read model)
+- **Database**: MongoDB (`quickbite_dispatch`) for a lightweight restaurant-location projection, **Redis GEO** for live driver positions
+- **Port**: `5005`
+- **Events consumed**: `RestaurantCreatedV1` (from `restaurant.exchange`) → projects restaurant coordinates into Mongo; `OrderCreatedV1` (from `orders.events`) → triggers driver assignment
+- **Events published**: `OrderDriverAssignedV1` → `orders.events` exchange (routing key `order.driver.assigned`)
+- **Responsibilities**: on every new order, resolves the restaurant's coordinates, runs a Redis `GEORADIUS` query (10km radius, closest-first) against the `active:drivers` geo-index to find the nearest available driver, and publishes the assignment back onto the event bus
+- **Depends on**: the Users Service continuously feeding driver locations into the same Redis `active:drivers` geo-index via `PUT /api/v1/drivers/location`
+
 ---
 
 ## 🌐 Ports & Endpoints Reference
 
-| Component               | Type              | Port    | Notes                                             |
-|-------------------------|-------------------|---------|----------------------------------------------------|
-| **API Gateway**         | Spring Cloud Gateway | `8080`  | Public entry point for all client traffic         |
-| **Orders Service**      | Spring Boot (REST) | `5001`  | `/api/v1/orders/**`                                |
-| **Catalogs Service**    | Spring Boot (REST) | `5002`  | `/api/v1/restaurants/**/catalog`, `/api/v1/owner/**` |
-| **Restaurants Service** | Spring Boot (REST) | `5003`  | `/api/v1/restaurants/**`                           |
-| **Users Service**       | Spring Boot (REST) | `5004`  | `/api/v1/auth`, `/users`, `/customers`, `/drivers` |
-| **PostgreSQL**          | Relational DB      | `5432`  | Write-side database (per-service logical DBs)     |
-| **MongoDB**             | Document DB        | `27017` | Read-side projections (CQRS read models)          |
-| **RabbitMQ (AMQP)**     | Message Broker     | `5672`  | Event bus (topic exchanges)                       |
-| **RabbitMQ Management** | Web UI             | `15672` | Broker dashboard (guest/guest)                    |
-| **Redis**               | In-memory store    | `6379`  | Gateway rate-limiter token bucket store            |
-| **Zipkin**              | Tracing UI/Collector | `9411`  | Distributed trace visualization                  |
-| **Prometheus**          | Metrics TSDB       | `9090`  | Scrapes `/actuator/prometheus` from every service |
-| **Grafana**             | Dashboards         | `3000`  | Default login `admin` / `admin`                   |
+| Component               | Type                 | Port    | Notes                                                |
+| ----------------------- | -------------------- | ------- | ---------------------------------------------------- |
+| **API Gateway**         | Spring Cloud Gateway | `8080`  | Public entry point for all client traffic            |
+| **Orders Service**      | Spring Boot (REST)   | `5001`  | `/api/v1/orders/**`                                  |
+| **Catalogs Service**    | Spring Boot (REST)   | `5002`  | `/api/v1/restaurants/**/catalog`, `/api/v1/owner/**` |
+| **Restaurants Service** | Spring Boot (REST)   | `5003`  | `/api/v1/restaurants/**`                             |
+| **Users Service**       | Spring Boot (REST)   | `5004`  | `/api/v1/auth`, `/users`, `/customers`, `/drivers`   |
+| **Dispatch Service**    | Spring Boot (Event Consumer) | `5005`  | No REST routes — pure RabbitMQ listener + Actuator/Swagger only |
+| **PostgreSQL**          | Relational DB        | `5432`  | Write-side database (per-service logical DBs)        |
+| **MongoDB**             | Document DB          | `27017` | Read-side projections (CQRS read models)             |
+| **RabbitMQ (AMQP)**     | Message Broker       | `5672`  | Event bus (topic exchanges)                          |
+| **RabbitMQ Management** | Web UI               | `15672` | Broker dashboard (guest/guest)                       |
+| **Redis**               | In-memory store      | `6379`  | Gateway rate-limiter token bucket store              |
+| **Zipkin**              | Tracing UI/Collector | `9411`  | Distributed trace visualization                      |
+| **Prometheus**          | Metrics TSDB         | `9090`  | Scrapes `/actuator/prometheus` from every service    |
+| **Grafana**             | Dashboards           | `3000`  | Default login `admin` / `admin`                      |
 
 > [!IMPORTANT]
-> Currently the API Gateway routes **`catalogs-service`**, **`orders-service`**, and **`restaurants-service`**. The **`users-service`** is not yet wired into the Gateway's route table — see [Roadmap](#-roadmap).
+> The API Gateway now routes **all four** business services — `users-service`, `catalogs-service`, `orders-service`, and `restaurants-service`. The **`dispatch-service`** is intentionally **not** in the Gateway's route table — it's a pure event consumer with no client-facing endpoints, so it's reached only via RabbitMQ.
 
 ---
 
@@ -242,7 +264,7 @@ Versioned event names (`V1` suffix) allow the schema to evolve without breaking 
 | GET | `/customers/addresses` | JWT | List saved addresses |
 | POST | `/drivers/profile` | JWT (DRIVER/ADMIN) | Register a driver profile |
 | PATCH | `/drivers/status` | JWT (DRIVER/ADMIN) | Toggle driver online/offline |
-| PUT | `/drivers/location` | JWT (DRIVER/ADMIN) | Update live driver location |
+| PUT | `/drivers/location` | JWT (DRIVER/ADMIN) | Update live driver location (feeds the Redis geo-index used by Dispatch) |
 
 **Restaurants Service** (`/api/v1/restaurants`, port `5003`)
 | Method | Route | Auth | Description |
@@ -264,10 +286,16 @@ Versioned event names (`V1` suffix) allow the schema to evolve without breaking 
 |---|---|---|---|
 | POST | `/orders` | JWT | Place a new order |
 | GET | `/orders/{id}` | JWT | Get order details (read model) |
+| PATCH | `/orders/{id}/status` | JWT | Update order status (`PENDING`, `CONFIRMED`, `PREPARING`, `OUT_FOR_DELIVERY`, `DELIVERED`, `CANCELLED`) |
+| PATCH | `/orders/{id}/assign-driver` | JWT | Manually assign a driver to an order |
+
+**Dispatch Service** (port `5005`)
+No REST routes — driver assignment happens automatically via RabbitMQ event consumption, not an API call. See [Event-Driven Communication](#-event-driven-communication-rabbitmq).
 
 **Gateway-level fallbacks** (returned when a downstream circuit breaker is open)
 | Route | Description |
 |---|---|
+| `GET /fallback/users` | 503 fallback for Users Service |
 | `GET /fallback/catalogs` | 503 fallback for Catalogs Service |
 | `GET /fallback/orders` | 503 fallback for Orders Service |
 | `GET /fallback/restaurants` | 503 fallback for Restaurants Service |
@@ -278,38 +306,54 @@ Versioned event names (`V1` suffix) allow the schema to evolve without breaking 
 
 Every service publishes its domain events to its own **Topic Exchange**, and interested services bind their own **queues** to consume relevant events — services never query another service's database directly.
 
-| Exchange | Routing Key | Queue | Published By | Consumed By | Event |
-|---|---|---|---|---|---|
-| `orders.events` | `orders.order.created` | `orders.order-created.projection-queue` | Orders Service | Orders Service (self-projection) | `OrderCreatedV1` |
-| `catalogs.events` | `catalogs.item.created` | `catalogs.item-created.projection-queue` | Catalogs Service | Catalogs Service (self-projection) | `ProductCreatedV1` |
-| `restaurant.exchange` | `restaurant.created` | `restaurant.created.queue` | Restaurants Service | Catalogs Service (`RestaurantRefConsumer`) | `RestaurantCreatedV1` |
+| Exchange              | Routing Key                   | Queue                                           | Published By        | Consumed By                                              | Event                    |
+| ---------------------- | ------------------------------ | ------------------------------------------------ | -------------------- | ----------------------------------------------------------- | -------------------------- |
+| `orders.events`       | `orders.order.created`        | `orders.order-created.projection-queue`         | Orders Service      | Orders Service (self-projection)                           | `OrderCreatedV1`         |
+| `catalogs.events`     | `catalogs.item.created`       | `catalogs.item-created.projection-queue`        | Catalogs Service    | Catalogs Service (self-projection)                         | `ProductCreatedV1`       |
+| `restaurant.exchange` | `restaurant.created`          | `restaurant.created.queue`                      | Restaurants Service | Catalogs Service (`RestaurantRefConsumer`)                 | `RestaurantCreatedV1`    |
+| `restaurant.exchange` | `restaurant.created.#`        | `restaurant.created.dispatch.queue`             | Restaurants Service | Dispatch Service (`RestaurantEventListener`)               | `RestaurantCreatedV1`    |
+| `orders.events`       | `orders.order.created`        | `order.created.dispatch.queue`                  | Orders Service      | Dispatch Service (`OrderEventListener`)                    | `OrderCreatedV1`         |
+| `orders.events`       | `order.driver.assigned`       | `orders.driver-assigned.projection-queue`       | Dispatch Service    | Orders Service (`OrderProjectionConsumer`) — updates the MongoDB read model's `driverId` | `OrderDriverAssignedV1`  |
+| `orders.events`       | `order.driver.assigned.#`     | `order.driver.assigned.orders.queue`            | Dispatch Service    | Orders Service (`OrderDriverAssignedListener`) — replays `AssignDriverCommand` against the Postgres write model | `OrderDriverAssignedV1`  |
+| `orders.events`       | `orders.status.updated`       | `orders.status-updated.projection-queue`        | Orders Service      | Orders Service (self-projection)                            | `OrderStatusUpdatedV1`   |
+
+> [!NOTE]
+> `RestaurantCreatedV1` and `OrderDriverAssignedV1` are both **fan-out events** — each has two independent queues bound to the same exchange/key pattern, so two different consumers react to a single publish without knowing about each other. For `OrderDriverAssignedV1` specifically, this is what keeps the Postgres write model and the MongoDB read model **both** in sync whenever Dispatch auto-assigns a driver — one queue drives the command handler (write side), the other drives the projection directly (read side).
 
 Every publish happens through the **Outbox Pattern**:
+
 1. A command handler writes the business row **and** an `OutboxMessage` row in the **same DB transaction**.
 2. A `@Scheduled` `OutboxPublisher` polls for `PENDING` outbox rows every **2 seconds**.
 3. It relays the payload to the correct RabbitMQ exchange/routing key and marks it `PROCESSED` (or `FAILED` with the error captured for retry/inspection).
 
 This guarantees **at-least-once delivery** even if RabbitMQ is temporarily down when the transaction commits.
 
+> [!NOTE]
+> The Dispatch Service's `OrderDriverAssignedV1` publish is the one exception to the pattern above — it's sent with a direct `RabbitTemplate.convertAndSend(...)` call rather than through an Outbox row, since Dispatch has no relational write-side database to stage it in.
+>
+> Separately: the **manual** `PATCH /orders/{id}/assign-driver` endpoint does *not* go through this event flow at all — its handler (`AssignDriverCommandHandler`) writes directly to Postgres with no outbox row and publishes nothing. So only the *automatic* Dispatch-driven assignment path keeps the read model and any future downstream consumers in sync; a manual override would silently desync the MongoDB projection until something else corrects it.
+
 <p align="center">
   <img src="./assets/RabbitMQ.png" alt="RabbitMQ Event Flow Diagram" width="90%" />
   <br/>
-  <i>Every exchange, routing key, and queue in the system — including the one cross-service consumption (Catalogs consuming RestaurantCreatedV1)</i>
+  <i>Every exchange, routing key, and queue in the system — including the fan-out consumption of RestaurantCreatedV1 (Catalogs + Dispatch) and OrderDriverAssignedV1 (write-model + read-model in Orders)</i>
 </p>
 
 ---
 
 ## 🗄️ Data Architecture (Polyglot Persistence + CQRS)
 
-| Service | Write DB (PostgreSQL) | Read DB (MongoDB) | ORM / Data Access |
-|---|---|---|---|
-| Users | `quickbite_users` | — | Spring Data JPA |
-| Restaurants | `quickbite_restaurants` | `quickbite_restaurants` (read model) | Spring Data JPA + Spring Data MongoDB |
-| Catalogs | `quickbite_catalogs` | `quickbite_catalogs` (read model) | Spring Data JPA + Spring Data MongoDB |
-| Orders | `quickbite_orders` | `quickbite_orders` (read model) | Spring Data JPA + Spring Data MongoDB |
+| Service     | Write DB (PostgreSQL)   | Read DB (MongoDB)                    | Other Storage                          | ORM / Data Access                     |
+| ----------- | ------------------------ | -------------------------------------- | ----------------------------------------- | ---------------------------------------- |
+| Users       | `quickbite_users`       | —                                     | Redis (`active:drivers` geo-index)     | Spring Data JPA                       |
+| Restaurants | `quickbite_restaurants` | `quickbite_restaurants` (read model) | —                                       | Spring Data JPA + Spring Data MongoDB |
+| Catalogs    | `quickbite_catalogs`    | `quickbite_catalogs` (read model)    | —                                       | Spring Data JPA + Spring Data MongoDB |
+| Orders      | `quickbite_orders`      | `quickbite_orders` (read model)      | —                                       | Spring Data JPA + Spring Data MongoDB |
+| Dispatch    | —                        | `quickbite_dispatch` (`restaurant_locations`) | Redis (`active:drivers` geo-index, read-only) | Spring Data MongoDB               |
 
 - **Write side**: normalized relational schema in Postgres, changes flow through Mediator command handlers.
 - **Read side**: denormalized MongoDB documents built asynchronously by **Projection Consumers** listening on RabbitMQ — optimized purely for fast reads, decoupled from the write schema.
+- **Dispatch is the one service with no Postgres write-side at all** — it's purely a read-model/consumer service, projecting restaurant locations into MongoDB and querying (never writing) the Redis geo-index that Users writes to.
 - Each database is **logically isolated per service** even though, in local development, they share one Postgres/MongoDB container for convenience.
 
 ---
@@ -341,42 +385,53 @@ This guarantees **at-least-once delivery** even if RabbitMQ is temporarily down 
 
 QuickBite AI ships with a full three-pillar observability setup out of the box:
 
-| Pillar | Tool | How |
-|---|---|---|
-| **Metrics** | Prometheus + Grafana | Every service exposes `/actuator/prometheus` via Micrometer's Prometheus registry; `prometheus.yml` scrapes the Gateway (`8080`), Orders (`5001`), Catalogs (`5002`), and Restaurants (`5003`) every 5s |
-| **Tracing** | Zipkin + Micrometer Tracing (OpenTelemetry bridge) | 100% trace sampling in local dev; trace/span IDs injected directly into console log patterns |
-| **Logging** | SLF4J / Logback console appender | Structured console logs with `[traceId, spanId]` correlation for every request |
-| **Health** | Spring Boot Actuator | `health`, `info`, `metrics`, `prometheus`, and (on the Gateway) `gateway` endpoints exposed |
+| Pillar      | Tool                                               | How                                                                                                                                                                                                     |
+| ----------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Metrics** | Prometheus + Grafana                               | Every service exposes `/actuator/prometheus` via Micrometer's Prometheus registry; `prometheus.yml` scrapes the Gateway (`8080`), Orders (`5001`), Catalogs (`5002`), and Restaurants (`5003`) every 5s |
+| **Tracing** | Zipkin + Micrometer Tracing (OpenTelemetry bridge) | 100% trace sampling in local dev; trace/span IDs injected directly into console log patterns                                                                                                            |
+| **Logging** | SLF4J / Logback console appender                   | Structured console logs with `[traceId, spanId]` correlation for every request                                                                                                                          |
+| **Health**  | Spring Boot Actuator                               | `health`, `info`, `metrics`, `prometheus`, and (on the Gateway) `gateway` endpoints exposed                                                                                                             |
 
 ---
 
 ## 🛠️ Tech Stack & External Services
 
 **Core Framework & Language**
+
 - ✔️ **Java 21**
 - ✔️ **Spring Boot 3.4.2**
 - ✔️ **Spring Cloud 2024.0.0**
 
 **Microservices & Gateway**
+
 - ✔️ **Spring Cloud Gateway** — reactive routing, filters, predicates
 - ✔️ **Resilience4j** — reactive circuit breaker for the Gateway
 - ✔️ **Spring Data Redis (Reactive)** — backs the Gateway's rate limiter
 
 **Persistence**
+
 - ✔️ **Spring Data JPA** + **PostgreSQL 17 (Alpine)** — write-side relational storage
 - ✔️ **Spring Data MongoDB** + **MongoDB 7.0** — read-side projections
 - ✔️ **HikariCP** — JDBC connection pooling
 
+**Geospatial & Real-Time Dispatch**
+
+- ✔️ **Spring Data Redis** (`StringRedisTemplate`, imperative) — geospatial driver index, distinct from the Gateway's reactive Redis usage above
+- ✔️ **Redis GEO commands** (`GEOADD` / `GEORADIUS`) — Users writes live driver coordinates into `active:drivers`; Dispatch queries the nearest driver within a 10km radius, closest-first
+
 **Messaging**
+
 - ✔️ **RabbitMQ 3.13 (management-alpine)** — event bus, topic exchanges, durable queues
 - ✔️ **Spring AMQP** — declarative exchange/queue/binding configuration, `Jackson2JsonMessageConverter` for JSON payloads
 
 **Security**
+
 - ✔️ **Spring Security** — filter chain, method/role authorization
 - ✔️ **JJWT (io.jsonwebtoken) 0.12.5** — JWT creation/parsing (`jjwt-api`, `jjwt-impl`, `jjwt-jackson`)
 - ✔️ **BCrypt** — password hashing
 
 **Observability**
+
 - ✔️ **Spring Boot Actuator** — health/metrics endpoints
 - ✔️ **Micrometer + Micrometer Tracing (OTel bridge)** — metrics & tracing abstraction
 - ✔️ **OpenTelemetry Zipkin Exporter** — ships traces to Zipkin
@@ -385,16 +440,19 @@ QuickBite AI ships with a full three-pillar observability setup out of the box:
 - ✔️ **Zipkin** — trace collection & visualization UI
 
 **API Documentation**
+
 - ✔️ **Springdoc OpenAPI (2.8.3 / 2.7.0)** — auto-generated Swagger UI & OpenAPI 3 spec per service
 
 **Utilities & Tooling**
+
 - ✔️ **ULID Creator** — sortable unique IDs
 - ✔️ **Jackson** (`jackson-databind`, `jackson-datatype-jsr310`, `jackson-annotations`) — JSON (de)serialization, Java 8 time support
 - ✔️ **Lombok** — boilerplate reduction
 - ✔️ **Jakarta Bean Validation** (`spring-boot-starter-validation`) — request validation wired into the Mediator's `ValidationBehavior`
-- ✔️ **Maven (multi-module)** — build & dependency management across 7+ modules
+- ✔️ **Maven (multi-module)** — build & dependency management across **8 top-level modules** (19 Maven projects total, including each service's `api`/`core` split)
 
 **Containerization**
+
 - ✔️ **Docker & Docker Compose** — one-command infrastructure bring-up for every dependency
 
 ---
@@ -422,7 +480,7 @@ QuickBite-AI/
 │   │
 │   ├── users/
 │   │   ├── api/                         # REST controllers, exception handling
-│   │   └── core/                        # Vertical-slice features (register, login, addresses, drivers)
+│   │   └── core/                        # Vertical-slice features (register, login, addresses, drivers, driver location)
 │   │
 │   ├── restaurants/
 │   │   ├── api/
@@ -432,9 +490,13 @@ QuickBite-AI/
 │   │   ├── api/
 │   │   └── core/                        # Features + RabbitMQ config + Read Model projections
 │   │
-│   └── orders/
-│       ├── api/
-│       └── core/                        # Features + Read Model projections
+│   ├── orders/
+│   │   ├── api/
+│   │   └── core/                        # Features (create, status update, assign driver) + Read Model projections
+│   │
+│   └── dispatch/
+│       ├── api/                         # RabbitMQ listeners (Order + Restaurant events), no controllers
+│       └── core/                        # AssignDriverCommand + Redis GEO matching, restaurant-location read model
 │
 ├── docker-compose.infrastructure.yaml    # Postgres, MongoDB, RabbitMQ, Redis, Zipkin, Prometheus, Grafana
 ├── prometheus.yml                        # Scrape configuration for all services
@@ -457,19 +519,20 @@ No horizontal `service/`, `repository/`, `dto/` layers shared across unrelated f
 
 ## 🧱 Architectural Patterns Used
 
-| Pattern | Where It's Used |
-|---|---|
-| **Microservices Architecture** | Overall system decomposition (`users`, `restaurants`, `catalogs`, `orders`, `api-gateway`) |
-| **Vertical Slice Architecture** | Every `core` module (`features/<usecase>/...`) |
-| **CQRS** | Custom `Mediator` + separate `ICommand`/`IQuery` handlers, Postgres writes / MongoDB reads |
-| **Domain-Driven Design** | `AggregateRoot`, `Entity` base classes; rich domain models (`Order`, `Restaurant`, `CatalogItem`) |
-| **Event-Driven Architecture** | RabbitMQ topic exchanges + versioned domain events (`OrderCreatedV1`, etc.) |
-| **Outbox Pattern** | `OutboxMessage` + scheduled `OutboxPublisher` for guaranteed event delivery |
-| **API Gateway Pattern** | Spring Cloud Gateway routing all client traffic |
-| **Circuit Breaker Pattern** | Resilience4j circuit breakers per downstream route, with dedicated fallback controllers |
-| **Rate Limiting** | Redis-backed token bucket per client IP at the Gateway |
-| **Pipeline / Behavior Pattern** | `LoggingBehavior`, `ValidationBehavior` wrapping every Mediator request |
-| **Shared Kernel** | `building-blocks` module reused by every service |
+| Pattern                         | Where It's Used                                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Microservices Architecture**  | Overall system decomposition (`users`, `restaurants`, `catalogs`, `orders`, `dispatch`, `api-gateway`) |
+| **Vertical Slice Architecture** | Every `core` module (`features/<usecase>/...`)                                                    |
+| **CQRS**                        | Custom `Mediator` + separate `ICommand`/`IQuery` handlers, Postgres writes / MongoDB reads        |
+| **Domain-Driven Design**        | `AggregateRoot`, `Entity` base classes; rich domain models (`Order`, `Restaurant`, `CatalogItem`) |
+| **Event-Driven Architecture**   | RabbitMQ topic exchanges + versioned domain events (`OrderCreatedV1`, `OrderDriverAssignedV1`, etc.) |
+| **Outbox Pattern**              | `OutboxMessage` + scheduled `OutboxPublisher` for guaranteed event delivery (all services except Dispatch, which has no relational write-side to stage from) |
+| **Geospatial Matching**          | Redis GEO (`GEOADD` / `GEORADIUS`) for nearest-driver lookup in the Dispatch Service               |
+| **API Gateway Pattern**         | Spring Cloud Gateway routing all client traffic                                                   |
+| **Circuit Breaker Pattern**     | Resilience4j circuit breakers per downstream route, with dedicated fallback controllers           |
+| **Rate Limiting**               | Redis-backed token bucket per client IP at the Gateway                                            |
+| **Pipeline / Behavior Pattern** | `LoggingBehavior`, `ValidationBehavior` wrapping every Mediator request                           |
+| **Shared Kernel**               | `building-blocks` module reused by every service                                                  |
 
 ---
 
@@ -491,7 +554,7 @@ From the project root (multi-module Maven build):
 ./mvnw clean install
 ```
 
-This builds, in order: `building-blocks` → `services/shared` → `services/orders` → `services/catalogs` → `api-gateway` → `services/restaurants` → `services/users`.
+This builds, in order: `building-blocks` → `services/shared` → `services/orders` → `services/catalogs` → `api-gateway` → `services/restaurants` → `services/users` → `services/dispatch`.
 
 ### 3. Run the Services
 
@@ -502,25 +565,26 @@ Run each Spring Boot application (in separate terminals):
 ./mvnw spring-boot:run -pl services/restaurants/api
 ./mvnw spring-boot:run -pl services/catalogs/api
 ./mvnw spring-boot:run -pl services/orders/api
+./mvnw spring-boot:run -pl services/dispatch/api
 ./mvnw spring-boot:run -pl api-gateway
 ```
 
 ### 4. Explore
 
-| What | Where |
-|---|---|
-| API Gateway | `http://localhost:8080` |
+| What                     | Where                                     |
+| ------------------------ | ------------------------------------------ |
+| API Gateway              | `http://localhost:8080`                   |
 | Swagger UI (per service) | `http://localhost:<port>/swagger-ui.html` |
-| RabbitMQ Management | `http://localhost:15672` (guest / guest) |
-| Zipkin Traces | `http://localhost:9411` |
-| Prometheus | `http://localhost:9090` |
-| Grafana | `http://localhost:3000` (admin / admin) |
+| RabbitMQ Management      | `http://localhost:15672` (guest / guest)  |
+| Zipkin Traces            | `http://localhost:9411`                   |
+| Prometheus               | `http://localhost:9090`                   |
+| Grafana                  | `http://localhost:3000` (admin / admin)   |
 
 ---
 
 ## 🔮 Future Vision — Planned Architecture
 
-The current system (4 services + Gateway) is the **foundation**. The diagrams below map out where QuickBite AI is headed once every planned service, ML feature, and platform capability is in place — a full-scale, production-grade food delivery platform.
+The current system (5 services + Gateway) is the **foundation**. The diagrams below map out where QuickBite AI is headed once every planned service, ML feature, and platform capability is in place — a full-scale, production-grade food delivery platform.
 
 ### Complete Future-State System Architecture
 
@@ -567,33 +631,33 @@ What placing an order will look like end-to-end once the full platform is built:
 
 ## 🗺️ Roadmap
 
-| Feature | Status |
-|---|---|
-| Building Blocks (Mediator, Outbox, Security) | ✅ Completed |
-| API Gateway (routing, rate-limiting, circuit breaking) | ✅ Completed |
-| Restaurants Service | ✅ Completed |
-| Catalogs Service | ✅ Completed |
-| Orders Service | ✅ Completed |
-| Users Service (auth, customers, drivers) | ✅ Completed |
-| Wire Users Service into API Gateway routes | ✅ Completed |
-| Enhancing Schema and wiring up | ✅ Completed |
-| Delivery & Dispatch Service | ✅ Completed |
-| Payments Service | ❌ Not Started |
-| Route Optimization Service (Maps/ETA) | ❌ Not Started |
-| Live Tracking Service (WebSocket) | ❌ Not Started |
-| Notifications Service (push/SMS/email) | ❌ Not Started |
-| Reviews & Ratings Service | ❌ Not Started |
-| Promotions & Coupons Service | ❌ Not Started |
-| Loyalty & Rewards Service | ❌ Not Started |
-| Customer Support Service | ❌ Not Started |
-| Recommendation Engine (ML) | ❌ Not Started |
-| AI Chat Assistant (LLM) | ❌ Not Started |
-| Nutrition & Calorie Service | ❌ Not Started |
-| Fraud Detection Service (ML) | ❌ Not Started |
-| Demand Forecasting Service (ML) | ❌ Not Started |
-| Kubernetes / Helm deployment manifests | ❌ Not Started |
-| CI/CD pipeline (GitHub Actions) | ❌ Not Started |
-| Centralized log aggregation (ELK/Loki) | ❌ Not Started |
+| Feature                                                | Status         |
+| ------------------------------------------------------ | -------------- |
+| Building Blocks (Mediator, Outbox, Security)           | ✅ Completed   |
+| API Gateway (routing, rate-limiting, circuit breaking) | ✅ Completed   |
+| Restaurants Service                                    | ✅ Completed   |
+| Catalogs Service                                       | ✅ Completed   |
+| Orders Service                                         | ✅ Completed   |
+| Users Service (auth, customers, drivers)               | ✅ Completed   |
+| Wire Users Service into API Gateway routes             | ✅ Completed   |
+| Enhancing Schema and wiring up                         | ✅ Completed   |
+| Delivery & Dispatch Service                            | ✅ Completed   |
+| Payments Service                                       | ❌ Not Started |
+| Route Optimization Service (Maps/ETA)                  | ❌ Not Started |
+| Live Tracking Service (WebSocket)                      | ❌ Not Started |
+| Notifications Service (push/SMS/email)                 | ❌ Not Started |
+| Reviews & Ratings Service                              | ❌ Not Started |
+| Promotions & Coupons Service                           | ❌ Not Started |
+| Loyalty & Rewards Service                              | ❌ Not Started |
+| Customer Support Service                               | ❌ Not Started |
+| Recommendation Engine (ML)                             | ❌ Not Started |
+| AI Chat Assistant (LLM)                                | ❌ Not Started |
+| Nutrition & Calorie Service                            | ❌ Not Started |
+| Fraud Detection Service (ML)                           | ❌ Not Started |
+| Demand Forecasting Service (ML)                        | ❌ Not Started |
+| Kubernetes / Helm deployment manifests                 | ❌ Not Started |
+| CI/CD pipeline (GitHub Actions)                        | ❌ Not Started |
+| Centralized log aggregation (ELK/Loki)                 | ❌ Not Started |
 
 ---
 
