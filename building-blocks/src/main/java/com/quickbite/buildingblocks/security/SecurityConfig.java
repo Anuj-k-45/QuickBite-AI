@@ -1,8 +1,5 @@
 package com.quickbite.buildingblocks.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quickbite.buildingblocks.exceptions.ErrorResponse;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +17,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.quickbite.buildingblocks.exceptions.ErrorResponse;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -88,7 +90,16 @@ public class SecurityConfig {
                         // 4. Driver Routes
                         .requestMatchers("/api/v1/drivers/**").hasAnyRole("DRIVER", "ADMIN")
 
-                        // 5. User Profile / General Authenticated Routes
+                        // --- ADD THESE ORDER SECURITY RULES ---
+                        // 5. Orders Routes
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders").hasAnyRole("CUSTOMER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/orders/*/status").hasAnyRole("OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/orders/*/assign-driver")
+                        .hasAnyRole("DRIVER", "ADMIN")
+                        // ------------------------------------
+
+                        // 6. User Profile / General Authenticated Routes
                         .requestMatchers("/api/v1/users/me").authenticated()
                         .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
 

@@ -32,9 +32,8 @@ spring:
 
 app:
   jwt:
-    secret: 404E63F266436A576E5A7234743777217A25432A462D4A614E645267556B5870
-    expiration: 86400000 # 24 Hours in milliseconds
-
+    secret: 2a48518d7ceebe18b2c0f0e45222d3e956d02824ba4193b30293a60537c8bced9064ead4c1ac0d26
+    expiration: 86400000
 
 # Actuator & Observability Configuration
 management:

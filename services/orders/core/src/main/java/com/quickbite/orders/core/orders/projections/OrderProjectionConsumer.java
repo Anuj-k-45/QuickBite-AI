@@ -2,6 +2,7 @@ package com.quickbite.orders.core.orders.projections;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quickbite.shared.events.orders.OrderCreatedV1;
+import com.quickbite.shared.events.orders.OrderStatusUpdatedV1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -49,6 +50,30 @@ public class OrderProjectionConsumer {
             log.info("[MONGO PROJECTION] Order {} projected to MongoDB", event.orderId());
         } catch (Exception ex) {
             log.error("[MONGO PROJECTION ERROR] Failed to project order: {}", ex.getMessage(), ex);
+        }
+    }
+
+    @RabbitListener(bindings = @QueueBinding(value = @Queue(value = "orders.status-updated.projection-queue", durable = "true"), exchange = @Exchange(value = "orders.events", type = "topic", durable = "true"), key = "orders.status.updated"))
+    public void handleOrderStatusUpdated(String messagePayload) {
+        try {
+            OrderStatusUpdatedV1 event = objectMapper.readValue(messagePayload, OrderStatusUpdatedV1.class);
+
+            OrderReadModel readModel = repository.findById(event.orderId())
+                    .orElseThrow(() -> new RuntimeException("Order read model not found for ID: " + event.orderId()));
+
+            // Construct updated record with the new status
+            OrderReadModel updatedReadModel = new OrderReadModel(
+                    readModel.id(),
+                    readModel.customerId(),
+                    readModel.totalPrice(),
+                    event.newStatus(),
+                    readModel.items(),
+                    readModel.createdAt());
+
+            repository.save(updatedReadModel);
+            log.info("[MONGO PROJECTION] Order {} status updated to {} in MongoDB", event.orderId(), event.newStatus());
+        } catch (Exception ex) {
+            log.error("[MONGO PROJECTION ERROR] Failed to update order status projection: {}", ex.getMessage(), ex);
         }
     }
 }

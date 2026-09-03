@@ -47,7 +47,8 @@ public class CreateOrderCommandHandler implements ICommandHandler<CreateOrderCom
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                 // Instantiate Order matching its actual constructor signature
-                Order order = new Order(orderId, command.customerId(), OrderStatus.PENDING, orderItems);
+                Order order = new Order(orderId, command.customerId(), command.restaurantId(), OrderStatus.PENDING,
+                                orderItems);
                 orderRepository.save(order);
 
                 // Queue event matching OrderCreatedV1 record signature

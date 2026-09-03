@@ -46,9 +46,16 @@ public class OutboxPublisher {
                 String targetRoutingKey;
 
                 String eventType = message.getEventType() != null ? message.getEventType() : "";
+
                 if (eventType.contains("Order")) {
                     targetExchange = ordersExchange;
-                    targetRoutingKey = ordersRoutingKey;
+
+                    // Dynamically map routing keys based on event type class name
+                    if (eventType.contains("OrderStatusUpdatedV1")) {
+                        targetRoutingKey = "orders.status.updated";
+                    } else {
+                        targetRoutingKey = ordersRoutingKey; // default: orders.order.created
+                    }
                 } else {
                     targetExchange = catalogsExchange;
                     targetRoutingKey = catalogsRoutingKey;

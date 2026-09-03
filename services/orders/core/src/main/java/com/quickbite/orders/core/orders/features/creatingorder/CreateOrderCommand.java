@@ -14,18 +14,15 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 public record CreateOrderCommand(
-                @NotNull(message = "Customer ID is required") UUID customerId,
-
+                UUID customerId,
+                @NotNull(message = "Restaurant ID is required") UUID restaurantId,
                 @NotEmpty(message = "Order must contain at least one item") @Valid List<OrderItemDto> items)
                 implements ICommand<CreateOrderResult> {
 
         public record OrderItemDto(
                         @NotNull(message = "Product ID is required") UUID productId,
-
                         @NotBlank(message = "Product name cannot be empty") String productName,
-
                         @NotNull(message = "Unit price is required") @DecimalMin(value = "0.01", message = "Unit price must be greater than zero") BigDecimal unitPrice,
-
                         @Min(value = 1, message = "Quantity must be at least 1") int quantity) {
         }
 }
