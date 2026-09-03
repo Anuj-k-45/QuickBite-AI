@@ -9,6 +9,7 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,5 +51,19 @@ public class RabbitMqConfig {
     @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
+    public Queue orderDriverAssignedQueue() {
+        return new Queue("order.driver.assigned.orders.queue", true);
+    }
+
+    @Bean
+    public Binding orderDriverAssignedBinding(
+            Queue orderDriverAssignedQueue, 
+            @Qualifier("ordersExchange") TopicExchange orderExchange) {
+        return BindingBuilder.bind(orderDriverAssignedQueue)
+                .to(orderExchange)
+                .with("order.driver.assigned.#");
     }
 }

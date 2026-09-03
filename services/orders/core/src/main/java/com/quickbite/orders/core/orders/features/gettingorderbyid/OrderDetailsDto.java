@@ -9,13 +9,16 @@ public record OrderDetailsDto(
                 UUID id,
                 UUID customerId,
                 UUID restaurantId,
+                UUID driverId, // Added if tracked in your read model
                 String deliveryAddress,
                 Double deliveryLatitude,
                 Double deliveryLongitude,
                 String status,
                 BigDecimal totalPrice,
                 List<OrderItemDto> items,
-                Instant createdAt) {
+                Instant createdAt,
+                Instant updatedAt) { // Added if tracked in your read model
+
         public record OrderItemDto(
                         UUID productId,
                         String productName,

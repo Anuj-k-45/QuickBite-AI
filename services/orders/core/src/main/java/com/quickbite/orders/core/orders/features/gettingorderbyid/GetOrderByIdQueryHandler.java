@@ -35,12 +35,14 @@ public class GetOrderByIdQueryHandler implements IQueryHandler<GetOrderByIdQuery
                                 readModel.id(),
                                 readModel.customerId(),
                                 readModel.restaurantId(),
+                                readModel.driverId(),
                                 readModel.deliveryAddress(),
                                 readModel.deliveryLatitude(),
                                 readModel.deliveryLongitude(),
                                 readModel.status(),
                                 readModel.totalPrice(),
                                 items,
-                                readModel.createdAt());
+                                readModel.createdAt(),
+                                readModel.updatedAt());
         }
 }

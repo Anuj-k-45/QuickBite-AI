@@ -47,7 +47,9 @@ public class CreateRestaurantCommandHandler implements ICommandHandler<CreateRes
                 saved.getId(),
                 saved.getName(),
                 saved.getCuisineType(),
-                command.ownerPhone());
+                command.ownerPhone(),
+                saved.getLatitude(), // Pass latitude
+                saved.getLongitude()); // Pass longitude
 
         rabbitTemplate.convertAndSend("restaurant.exchange", "restaurant.created", event);
         return saved.getId();

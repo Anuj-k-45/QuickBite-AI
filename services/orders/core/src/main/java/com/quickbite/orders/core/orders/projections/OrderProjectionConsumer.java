@@ -1,8 +1,8 @@
 package com.quickbite.orders.core.orders.projections;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quickbite.shared.events.orders.OrderCreatedV1;
-import com.quickbite.shared.events.orders.OrderStatusUpdatedV1;
+import java.time.Instant;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -11,7 +11,10 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.quickbite.shared.events.orders.OrderCreatedV1;
+import com.quickbite.shared.events.orders.OrderDriverAssignedV1;
+import com.quickbite.shared.events.orders.OrderStatusUpdatedV1;
 
 @Component
 public class OrderProjectionConsumer {
@@ -38,18 +41,19 @@ public class OrderProjectionConsumer {
                             i.quantity()))
                     .toList();
 
-            // Updated constructor including restaurantId and delivery info
             OrderReadModel readModel = new OrderReadModel(
                     event.orderId(),
                     event.customerId(),
                     event.restaurantId(),
+                    null, // driverId is initially null until dispatched
                     event.deliveryAddress(),
                     event.deliveryLatitude(),
                     event.deliveryLongitude(),
                     event.totalPrice(),
                     event.status(),
                     items,
-                    event.createdAt());
+                    event.createdAt(),
+                    Instant.now());
 
             repository.save(readModel);
             log.info("[MONGO PROJECTION] Order {} projected to MongoDB", event.orderId());
@@ -66,23 +70,54 @@ public class OrderProjectionConsumer {
             OrderReadModel readModel = repository.findById(event.orderId())
                     .orElseThrow(() -> new RuntimeException("Order read model not found for ID: " + event.orderId()));
 
-            // Construct updated record preserving existing data and updating status
             OrderReadModel updatedReadModel = new OrderReadModel(
                     readModel.id(),
                     readModel.customerId(),
                     readModel.restaurantId(),
+                    readModel.driverId(),
                     readModel.deliveryAddress(),
                     readModel.deliveryLatitude(),
                     readModel.deliveryLongitude(),
                     readModel.totalPrice(),
                     event.newStatus(),
                     readModel.items(),
-                    readModel.createdAt());
+                    readModel.createdAt(),
+                    Instant.now());
 
             repository.save(updatedReadModel);
             log.info("[MONGO PROJECTION] Order {} status updated to {} in MongoDB", event.orderId(), event.newStatus());
         } catch (Exception ex) {
             log.error("[MONGO PROJECTION ERROR] Failed to update order status projection: {}", ex.getMessage(), ex);
+        }
+    }
+
+    @RabbitListener(bindings = @QueueBinding(value = @Queue(value = "orders.driver-assigned.projection-queue", durable = "true"), exchange = @Exchange(value = "orders.events", type = "topic", durable = "true"), key = "order.driver.assigned"))
+    public void handleOrderDriverAssigned(OrderDriverAssignedV1 event) {
+        try {
+            OrderReadModel readModel = repository.findById(event.getOrderId())
+                    .orElseThrow(
+                            () -> new RuntimeException("Order read model not found for ID: " + event.getOrderId()));
+
+            OrderReadModel updatedReadModel = new OrderReadModel(
+                    readModel.id(),
+                    readModel.customerId(),
+                    readModel.restaurantId(),
+                    event.getDriverId(), // Updates the projected driverId
+                    readModel.deliveryAddress(),
+                    readModel.deliveryLatitude(),
+                    readModel.deliveryLongitude(),
+                    readModel.totalPrice(),
+                    readModel.status(),
+                    readModel.items(),
+                    readModel.createdAt(),
+                    Instant.now());
+
+            repository.save(updatedReadModel);
+            log.info("[MONGO PROJECTION] Order {} assigned to Driver {} in MongoDB projection", event.getOrderId(),
+                    event.getDriverId());
+        } catch (Exception ex) {
+            log.error("[MONGO PROJECTION ERROR] Failed to update driver assignment projection: {}", ex.getMessage(),
+                    ex);
         }
     }
 }

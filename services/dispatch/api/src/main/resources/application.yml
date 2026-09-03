@@ -1,5 +1,5 @@
 server:
-  port: 5004
+  port: 5005
   error:
     include-message: always
     include-binding-errors: always
@@ -7,25 +7,24 @@ server:
       enabled: false
 
 spring:
-
+  application:
+    name: dispatch-service
   data:
+    mongodb:
+      uri: mongodb://localhost:27017/quickbite_dispatch
     redis:
       host: localhost
       port: 6379
-  application:
-    name: users-service
-  datasource:
-    url: jdbc:postgresql://localhost:5432/quickbite_users
-    username: quickbite
-    password: password
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        deserialization:
+          trust:
+            all: true
 
 app:
   jwt:

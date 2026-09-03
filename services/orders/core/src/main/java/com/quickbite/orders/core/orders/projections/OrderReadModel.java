@@ -13,13 +13,16 @@ public record OrderReadModel(
                 @Id UUID id,
                 UUID customerId,
                 UUID restaurantId,
+                UUID driverId,
                 String deliveryAddress,
                 Double deliveryLatitude,
                 Double deliveryLongitude,
                 BigDecimal totalPrice,
                 String status,
                 List<OrderItemReadModel> items,
-                Instant createdAt) {
+                Instant createdAt,
+                Instant updatedAt) {
+
         public record OrderItemReadModel(
                         UUID productId,
                         String productName,
