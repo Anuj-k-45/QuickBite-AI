@@ -103,8 +103,10 @@ public class SecurityConfig {
                         // Public Search APIs
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/api/v1/search/restaurants")
+                                "/api/v1/search/restaurants",
+                                "/api/v1/search/menu-items")
                         .permitAll()
+
 
                         // =====================================================
                         // 2. CUSTOMER ROUTES
