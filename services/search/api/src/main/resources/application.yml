@@ -1,0 +1,40 @@
+server:
+  port: 5006
+
+spring:
+  application:
+    name: search-service
+
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 3s
+    socket-timeout: 10s
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+app:
+  jwt:
+    secret: 2a48518d7ceebe18b2c0f0e45222d3e956d02824ba4193b30293a60537c8bced9064ead4c1ac0d26
+    expiration: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+
+  tracing:
+    sampling:
+      probability: 1.0
+
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"

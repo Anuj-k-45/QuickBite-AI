@@ -1,79 +1,77 @@
-package com.quickbite.shared.events.restaurants;
+package com.quickbite.search.core.documents;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public class RestaurantCreatedV1 {
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
-    // Existing fields - DO NOT CHANGE
+@Document(indexName = "restaurants")
+public class RestaurantSearchDocument {
+
+    @Id
     private UUID id;
-    private String name;
-    private String cuisineType;
-    private String ownerPhone;
-    private Double latitude;
-    private Double longitude;
 
-    // New fields for Search
+    @Field(type = FieldType.Text)
+    private String name;
+
+    @Field(type = FieldType.Text)
     private String description;
+
+    @Field(type = FieldType.Keyword)
+    private String cuisineType;
+
+    @Field(type = FieldType.Text)
     private String address;
+
+    @Field(type = FieldType.Boolean)
     private boolean isOpen;
+
+    @Field(type = FieldType.Keyword)
     private String imageUrl;
+
+    @Field(type = FieldType.Double)
     private Double rating;
+
+    @Field(type = FieldType.Integer)
     private Integer deliveryTimeMinutes;
+
+    @Field(type = FieldType.Double)
     private BigDecimal costForTwo;
 
-    public RestaurantCreatedV1() {
+    private GeoPoint location;
+
+    public RestaurantSearchDocument() {
     }
 
-    // Existing constructor - KEEP IT
-    public RestaurantCreatedV1(
+    public RestaurantSearchDocument(
             UUID id,
             String name,
-            String cuisineType,
-            String ownerPhone,
-            Double latitude,
-            Double longitude) {
-
-        this.id = id;
-        this.name = name;
-        this.cuisineType = cuisineType;
-        this.ownerPhone = ownerPhone;
-        this.latitude = latitude;
-        this.longitude = longitude;
-    }
-
-    // New constructor for publishers that want to send complete data
-    public RestaurantCreatedV1(
-            UUID id,
-            String name,
-            String cuisineType,
-            String ownerPhone,
-            Double latitude,
-            Double longitude,
             String description,
+            String cuisineType,
             String address,
             boolean isOpen,
             String imageUrl,
             Double rating,
             Integer deliveryTimeMinutes,
-            BigDecimal costForTwo) {
+            BigDecimal costForTwo,
+            GeoPoint location) {
 
         this.id = id;
         this.name = name;
-        this.cuisineType = cuisineType;
-        this.ownerPhone = ownerPhone;
-        this.latitude = latitude;
-        this.longitude = longitude;
         this.description = description;
+        this.cuisineType = cuisineType;
         this.address = address;
         this.isOpen = isOpen;
         this.imageUrl = imageUrl;
         this.rating = rating;
         this.deliveryTimeMinutes = deliveryTimeMinutes;
         this.costForTwo = costForTwo;
+        this.location = location;
     }
-
-    // Existing getters/setters
 
     public UUID getId() {
         return id;
@@ -91,46 +89,20 @@ public class RestaurantCreatedV1 {
         this.name = name;
     }
 
-    public String getCuisineType() {
-        return cuisineType;
-    }
-
-    public void setCuisineType(String cuisineType) {
-        this.cuisineType = cuisineType;
-    }
-
-    public String getOwnerPhone() {
-        return ownerPhone;
-    }
-
-    public void setOwnerPhone(String ownerPhone) {
-        this.ownerPhone = ownerPhone;
-    }
-
-    public Double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
-
-    // New getters/setters
-
     public String getDescription() {
         return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getCuisineType() {
+        return cuisineType;
+    }
+
+    public void setCuisineType(String cuisineType) {
+        this.cuisineType = cuisineType;
     }
 
     public String getAddress() {
@@ -179,5 +151,13 @@ public class RestaurantCreatedV1 {
 
     public void setCostForTwo(BigDecimal costForTwo) {
         this.costForTwo = costForTwo;
+    }
+
+    public GeoPoint getLocation() {
+        return location;
+    }
+
+    public void setLocation(GeoPoint location) {
+        this.location = location;
     }
 }

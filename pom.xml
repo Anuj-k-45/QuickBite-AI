@@ -32,6 +32,7 @@
         <module>services/restaurants</module>
         <module>services/users</module>
         <module>services/dispatch</module>
+        <module>services/search</module>
     </modules>
 
     <dependencyManagement>

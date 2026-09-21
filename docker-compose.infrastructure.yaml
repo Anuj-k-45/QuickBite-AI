@@ -68,6 +68,7 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
 
+  # Redis (Geospatial Driver Index)
   redis:
     image: redis:7.2-alpine
     container_name: quickbite-redis
@@ -77,9 +78,25 @@ services:
     volumes:
       - redis_data:/data
 
+  # Elasticsearch (Full-Text & Fuzzy Search Engine)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.3
+    container_name: quickbite-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
 volumes:
   postgres_data:
   mongo_data:
   rabbitmq_data:
   grafana_data:
   redis_data:
+  elasticsearch_data:

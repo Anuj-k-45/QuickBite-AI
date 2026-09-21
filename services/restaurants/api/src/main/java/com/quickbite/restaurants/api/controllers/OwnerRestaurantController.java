@@ -10,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -87,6 +88,7 @@ public class OwnerRestaurantController {
         private Double longitude;
         @NotBlank
         private String phoneNumber;
+        @JsonProperty("isOpen")
         private boolean isOpen = true;
         private String imageUrl;
         private Integer deliveryTimeMinutes = 30;

@@ -5,28 +5,56 @@ import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 @Document(collection = "restaurants_read")
 public class RestaurantReadModel {
 
     @Id
     private UUID id;
+
     private String name;
+
+    private String description;
+
     private String cuisineType;
+
     private String address;
+
     private boolean isOpen;
+
     private String imageUrl;
+
     private Double rating;
+
     private Integer deliveryTimeMinutes;
+
     private BigDecimal costForTwo;
+
+    private Double latitude;
+
+    private Double longitude;
 
     public RestaurantReadModel() {
     }
 
-    public RestaurantReadModel(UUID id, String name, String cuisineType, String address, boolean isOpen,
-            String imageUrl, Double rating, Integer deliveryTimeMinutes, BigDecimal costForTwo) {
+    public RestaurantReadModel(
+            UUID id,
+            String name,
+            String description,
+            String cuisineType,
+            String address,
+            boolean isOpen,
+            String imageUrl,
+            Double rating,
+            Integer deliveryTimeMinutes,
+            BigDecimal costForTwo,
+            Double latitude,
+            Double longitude) {
+
         this.id = id;
         this.name = name;
+        this.description = description;
         this.cuisineType = cuisineType;
         this.address = address;
         this.isOpen = isOpen;
@@ -34,9 +62,10 @@ public class RestaurantReadModel {
         this.rating = rating;
         this.deliveryTimeMinutes = deliveryTimeMinutes;
         this.costForTwo = costForTwo;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
-    // Getters and Setters
     public UUID getId() {
         return id;
     }
@@ -51,6 +80,14 @@ public class RestaurantReadModel {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getCuisineType() {
@@ -107,5 +144,21 @@ public class RestaurantReadModel {
 
     public void setCostForTwo(BigDecimal costForTwo) {
         this.costForTwo = costForTwo;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }

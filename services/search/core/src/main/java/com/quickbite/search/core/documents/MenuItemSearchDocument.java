@@ -1,60 +1,54 @@
-package com.quickbite.catalogs.core.projections;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
+package com.quickbite.search.core.documents;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.UUID;
 
-@Document(collection = "catalog_read_models")
-public class CatalogReadModel {
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+
+@Document(indexName = "menu-items")
+public class MenuItemSearchDocument {
 
     @Id
-    private String id;
+    private UUID id;
 
-    @Field("restaurantId")
+    @Field(type = FieldType.Keyword)
     private UUID restaurantId;
 
-    @Field("name")
+    @Field(type = FieldType.Text)
     private String name;
 
-    @Field("description")
+    @Field(type = FieldType.Text)
     private String description;
 
-    @Field("price")
+    @Field(type = FieldType.Double)
     private BigDecimal price;
 
-    @Field("category")
+    @Field(type = FieldType.Keyword)
     private String category;
 
-    @Field("imageUrl")
+    @Field(type = FieldType.Keyword)
     private String imageUrl;
 
-    @Field("isVeg")
+    @Field(type = FieldType.Boolean)
     private boolean isVeg;
 
-    @Field("bestseller")
+    @Field(type = FieldType.Boolean)
     private boolean bestseller;
 
-    @Field("active")
+    @Field(type = FieldType.Boolean)
     private boolean active;
 
-    @Field("available")
+    @Field(type = FieldType.Boolean)
     private boolean available;
 
-    @Field("createdAt")
-    private Instant createdAt;
-
-    @Field("lastUpdated")
-    private Instant lastUpdated;
-
-    public CatalogReadModel() {
+    public MenuItemSearchDocument() {
     }
 
-    public CatalogReadModel(
-            String id,
+    public MenuItemSearchDocument(
+            UUID id,
             UUID restaurantId,
             String name,
             String description,
@@ -64,9 +58,7 @@ public class CatalogReadModel {
             boolean isVeg,
             boolean bestseller,
             boolean active,
-            boolean available,
-            Instant createdAt,
-            Instant lastUpdated) {
+            boolean available) {
 
         this.id = id;
         this.restaurantId = restaurantId;
@@ -79,15 +71,13 @@ public class CatalogReadModel {
         this.bestseller = bestseller;
         this.active = active;
         this.available = available;
-        this.createdAt = createdAt;
-        this.lastUpdated = lastUpdated;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -169,21 +159,5 @@ public class CatalogReadModel {
 
     public void setAvailable(boolean available) {
         this.available = available;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Instant getLastUpdated() {
-        return lastUpdated;
-    }
-
-    public void setLastUpdated(Instant lastUpdated) {
-        this.lastUpdated = lastUpdated;
     }
 }

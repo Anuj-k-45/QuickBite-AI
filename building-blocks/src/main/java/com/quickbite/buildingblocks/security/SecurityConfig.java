@@ -31,7 +31,10 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final ObjectMapper objectMapper;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, ObjectMapper objectMapper) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            ObjectMapper objectMapper) {
+
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.objectMapper = objectMapper;
     }
@@ -42,7 +45,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration authConfig) throws Exception {
+
         return authConfig.getAuthenticationManager();
     }
 
@@ -53,21 +58,32 @@ public class SecurityConfig {
             PasswordEncoder passwordEncoder) {
 
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder);
+
         return authProvider;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http) throws Exception {
+
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.disable())
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .sessionManagement(session -> session.sessionCreationPolicy(
+                        SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Public Endpoints (Auth, Docs, Actuator, Public Views)
+
+                        // =====================================================
+                        // 1. PUBLIC ENDPOINTS
+                        // =====================================================
+
                         .requestMatchers(
                                 "/api/v1/auth/**",
                                 "/actuator/**",
@@ -75,66 +91,156 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**")
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/restaurants", "/api/v1/restaurants/*",
+
+                        // Public restaurant APIs
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/restaurants",
+                                "/api/v1/restaurants/*",
                                 "/api/v1/restaurants/*/catalog")
                         .permitAll()
 
-                        // 2. Customer Routes
-                        .requestMatchers("/api/v1/customers/**").hasAnyRole("CUSTOMER", "ADMIN")
+                        // Public Search APIs
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/search/restaurants")
+                        .permitAll()
 
-                        // 3. Restaurant Owner Routes (Creating/Updating restaurants and catalog items)
-                        .requestMatchers(HttpMethod.POST, "/api/v1/restaurants").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/restaurants/**").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers("/api/v1/owner/restaurants/**").hasAnyRole("OWNER", "ADMIN")
+                        // =====================================================
+                        // 2. CUSTOMER ROUTES
+                        // =====================================================
 
-                        // 4. Driver Routes
-                        .requestMatchers("/api/v1/drivers/**").hasAnyRole("DRIVER", "ADMIN")
+                        .requestMatchers(
+                                "/api/v1/customers/**")
+                        .hasAnyRole("CUSTOMER", "ADMIN")
 
-                        // --- ADD THESE ORDER SECURITY RULES ---
-                        // 5. Orders Routes
-                        .requestMatchers(HttpMethod.POST, "/api/v1/orders").hasAnyRole("CUSTOMER", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/**").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/orders/*/status").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/orders/*/assign-driver")
+                        // =====================================================
+                        // 3. RESTAURANT OWNER ROUTES
+                        // =====================================================
+
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/v1/restaurants")
+                        .hasAnyRole("OWNER", "ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/v1/restaurants/**")
+                        .hasAnyRole("OWNER", "ADMIN")
+
+                        .requestMatchers(
+                                "/api/v1/owner/restaurants/**")
+                        .hasAnyRole("OWNER", "ADMIN")
+
+                        // =====================================================
+                        // 4. DRIVER ROUTES
+                        // =====================================================
+
+                        .requestMatchers(
+                                "/api/v1/drivers/**")
                         .hasAnyRole("DRIVER", "ADMIN")
-                        // ------------------------------------
 
-                        // 6. User Profile / General Authenticated Routes
-                        .requestMatchers("/api/v1/users/me").authenticated()
-                        .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
+                        // =====================================================
+                        // 5. ORDER ROUTES
+                        // =====================================================
 
-                        // Catch-all: Anything else requires authentication
-                        .anyRequest().authenticated())
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/v1/orders")
+                        .hasAnyRole("CUSTOMER", "ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/orders/**")
+                        .authenticated()
+
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/api/v1/orders/*/status")
+                        .hasAnyRole("OWNER", "ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/api/v1/orders/*/assign-driver")
+                        .hasAnyRole("DRIVER", "ADMIN")
+
+                        // =====================================================
+                        // 6. USER PROFILE / ADMIN ROUTES
+                        // =====================================================
+
+                        .requestMatchers(
+                                "/api/v1/users/me")
+                        .authenticated()
+
+                        .requestMatchers(
+                                "/api/v1/users/**")
+                        .hasRole("ADMIN")
+
+                        // =====================================================
+                        // 7. EVERYTHING ELSE
+                        // =====================================================
+
+                        .anyRequest()
+                        .authenticated())
+
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            if (!response.isCommitted()) {
-                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                                ErrorResponse error = new ErrorResponse(
-                                        401,
-                                        "Unauthorized",
-                                        "Full authentication is required to access this resource",
-                                        request.getRequestURI());
-                                response.getWriter().write(objectMapper.writeValueAsString(error));
-                                response.getWriter().flush();
-                                response.flushBuffer();
-                            }
-                        })
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            if (!response.isCommitted()) {
-                                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                                ErrorResponse error = new ErrorResponse(
-                                        403,
-                                        "Forbidden",
-                                        "You do not have sufficient permissions to access this resource",
-                                        request.getRequestURI());
-                                response.getWriter().write(objectMapper.writeValueAsString(error));
-                                response.getWriter().flush();
-                                response.flushBuffer();
-                            }
-                        }))
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+                        .authenticationEntryPoint(
+                                (request, response, authException) -> {
+
+                                    if (!response.isCommitted()) {
+
+                                        response.setStatus(
+                                                HttpServletResponse.SC_UNAUTHORIZED);
+
+                                        response.setContentType(
+                                                MediaType.APPLICATION_JSON_VALUE);
+
+                                        ErrorResponse error = new ErrorResponse(
+                                                401,
+                                                "Unauthorized",
+                                                "Full authentication is required to access this resource",
+                                                request.getRequestURI());
+
+                                        response.getWriter().write(
+                                                objectMapper.writeValueAsString(
+                                                        error));
+
+                                        response.getWriter().flush();
+                                        response.flushBuffer();
+                                    }
+                                })
+
+                        .accessDeniedHandler(
+                                (request, response,
+                                        accessDeniedException) -> {
+
+                                    if (!response.isCommitted()) {
+
+                                        response.setStatus(
+                                                HttpServletResponse.SC_FORBIDDEN);
+
+                                        response.setContentType(
+                                                MediaType.APPLICATION_JSON_VALUE);
+
+                                        ErrorResponse error = new ErrorResponse(
+                                                403,
+                                                "Forbidden",
+                                                "You do not have sufficient permissions to access this resource",
+                                                request.getRequestURI());
+
+                                        response.getWriter().write(
+                                                objectMapper.writeValueAsString(
+                                                        error));
+
+                                        response.getWriter().flush();
+                                        response.flushBuffer();
+                                    }
+                                }))
+
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

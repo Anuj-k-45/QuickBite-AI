@@ -49,3 +49,8 @@ management:
   zipkin:
     tracing:
       endpoint: "http://localhost:9411/api/v2/spans"
+
+quickbite:
+  rabbitmq:
+    restaurant-exchange: restaurant.exchange
+    restaurant-routing-key: restaurant.created
